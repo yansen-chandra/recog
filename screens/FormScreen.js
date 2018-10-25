@@ -93,7 +93,7 @@ export default class FormScreen extends Component {
           keyboardType="default"
           returnKeyType="next"
           onSubmitEditing={this._next}
-          blurOnSubmit={false}
+          blurOnSubmit={false} 
         />
         <View style={styles.section}>
           <Text style={styles.inputLabel}>
