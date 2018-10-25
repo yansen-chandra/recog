@@ -8,15 +8,15 @@ export default class FormScreen extends Component {
   };
 
   state = {
-    data: {
-    },
+    //data: {
+    //},
     costCenter: '',
     wbsElement: '',
     receiptNo: '',
     receiptDate: new Date(),
-    receiptAmount: "0.00",
-    amount: "0.00",
-    amountPerHead: "0.00",
+    receiptAmount: "0",
+    amount: "0",
+    amountPerHead: "0",
     type: '',
     reason: '',
     hostOfficeName: '',
@@ -70,18 +70,33 @@ export default class FormScreen extends Component {
           style={styles.input}
           value={this.state.noOfGuest}
           onChangeText={text => {
-            this.setState({ noOfGuest: text, guestNames: []});
+            this.setState({ noOfGuest: text, amountPerHead: this.calcAmountPerHead(), guestNames: []});
           }}
           ref={ref => {this._inputWbsElement = ref}}
           placeholder="Enter No of Guest"
           autoCapitalize="none"
           autoCorrect={false}
-          keyboardType="numeric"
+          keyboardType="number-pad"
           returnKeyType="next"
           onSubmitEditing={this._next}
           blurOnSubmit={false}
         />
-          {this.createGuestInputs()}
+        {this.createGuestInputs()}
+        <TextInput
+          style={styles.input}
+          value={this.state.noOfStaff}
+          onChangeText={text => {
+            this.setState({ noOfStaff: text, amountPerHead: this.calcAmountPerHead() });
+          }}
+          ref={ref => {this._inputWbsElement = ref}}
+          placeholder="Enter No of Staff"
+          autoCapitalize="none"
+          autoCorrect={false}
+          keyboardType="number-pad"
+          returnKeyType="next"
+          onSubmitEditing={this._next}
+          blurOnSubmit={false}
+        />
         <TextInput
           style={styles.input}
           value={this.state.receiptNo}
@@ -93,7 +108,7 @@ export default class FormScreen extends Component {
           keyboardType="default"
           returnKeyType="next"
           onSubmitEditing={this._next}
-          blurOnSubmit={false} 
+          blurOnSubmit={false}
         />
         <View style={styles.section}>
           <Text style={styles.inputLabel}>
@@ -147,7 +162,7 @@ export default class FormScreen extends Component {
         <TextInput
           style={styles.input}
           value={this.state.receiptAmount}
-          onChangeText={text => this.setState({ receiptAmount: text})}
+          onChangeText={text => this.setState({ receiptAmount: text, amount: text, amountPerHead: this.calcAmountPerHead() })}
           ref={ref => {this._inputReceiptAmount = ref}}
           placeholder="Enter Receipt Amount"
           autoCapitalize="none"
@@ -217,9 +232,24 @@ export default class FormScreen extends Component {
     );
   }
 
+  setStateData(propname, value)
+  {
+    var data = {...this.state.data};
+    data[propname] = value;
+    this.setState({data});
+  }
+
   setDate(newDate) {
     this.setState({selectedDate: newDate})
   }
+
+  calcAmountPerHead()
+  {
+    var result = (parseFloat(this.state.amount) / (parseFloat(this.state.noOfGuest) + parseFloat(this.state.noOfStaff))).toString();
+    alert(`${parseFloat(this.state.noOfGuest) + parseFloat(this.state.noOfStaff)} - ${result}`);
+    return result;
+  }
+
   _next = () => {
     //this._emailInput && this._emailInput.focus();
     Keyboard.dismiss();
