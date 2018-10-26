@@ -7,7 +7,8 @@ import {
   View,
   TouchableOpacity,
   Slider,
-  Platform
+  Platform,
+  ActivityIndicator
 } from 'react-native';
 import GalleryScreen from './GalleryScreen';
 //import isIPhoneX from 'react-native-is-iphonex';
@@ -78,6 +79,8 @@ export default class CameraScreen extends React.Component {
     pictureSizeId: 0,
     showGallery: false,
     showMoreOptions: false,
+    uploading: false,
+    processMessage: '',
   };
 
   async componentWillMount() {
@@ -129,95 +132,37 @@ export default class CameraScreen extends React.Component {
   handleMountError = ({ message }) => console.error(message);
 
   onPictureSaved = async photo => {
-
-      console.log(photo.uri);
-
+      console.log('captured photo : ', photo.uri);
       if (photo.uri) {
-        var url = 'https://cloud.ocrsdk.com/processReceipt?exportFormat=xml&country=Singapore&imageSource=photo';
-
-
-{/*        RNFetchBlob.fetch('POST', url, {
-            'Content-Type' : 'application/octet-stream',
-            Authorization : 'Basic ZmFwbF9yZWNlaXB0X3NjYW46UGdjZlVXblcvcERmVWFWVWRTOWQ5NHFl'
-          }, photo.base64)
-          .then((res) => {
-            console.log(res.text())
-            return res.text();
-          })
-          .then(xml => {
-            var taskId = "";
-            var parseString = require('xml2js').parseString;
-            parseString(xml, function (err, result) {
-                console.log("xml result", result);
-                console.log("xml id", result.response.task[0].$.id);
-                taskId = result.response.task[0].$.id;
-            });
-            this.timer = setInterval(()=> this.checkStatus(taskId), 1000);
-          })
-          .catch((err) => {
-            // error handling ..
-          })
-
-        return;
-*/}
-
-          //alert(photo.base64);
-          //console.log('base64', photo.base64);
-          //const byteArray = b64.toByteArray(photo.base64);
-          // Create the form data object
-          var data = new FormData();
-          data.append('photo', { uri: photo.uri, name: 'receipt.jpg', type: 'image/jpg' });
-          const response = await fetch(photo.uri);
-          const blob = await response.blob();
-
-          // Create the config object for the POST
-          // You typically have an OAuth2 token that you use for authentication
-          const config = {
-            method: 'POST',
-            headers: {
-              Accept: 'application/xml',
-              'Content-Type': 'application/octec-stream;',
-              Authorization: 'Basic ZmFwbF9yZWNlaXB0X3NjYW46UGdjZlVXblcvcERmVWFWVWRTOWQ5NHFl'
-            },
-            body: blob
-          };
+        this.setState({ uploading: true, processMessage: "Uploading Receipt ..." });
+        const url = 'https://cloud.ocrsdk.com/processReceipt?exportFormat=xml&country=Singapore&imageSource=photo';
+        const response = await fetch(photo.uri);
+        const blob = await response.blob();
+        const config = {
+          method: 'POST',
+          headers: {
+            Accept: 'application/xml',
+            'Content-Type': 'application/octec-stream;',
+            Authorization: 'Basic ZmFwbF9yZWNlaXB0X3NjYW46UGdjZlVXblcvcERmVWFWVWRTOWQ5NHFl'
+          },
+          body: blob
+        };
 
         fetch(url, config)
-        //.then((response) => response.json())
-        //.then(responseData => {
-        //  console.log("Response Data: ");
-        //  console.log(responseData);
-        //  console.log("Response Text: ");
-        //  console.log(responseData.text());
-        //  alert(JSON.stringify(responseData));
-         //})
-         .then(response => {
-               return response.text()
-             })
-         .then(xml => {
-           console.log("task result", xml);
-           var taskId = "";
-           var parseString = require('xml2js').parseString;
-           parseString(xml, function (err, result) {
-               console.log("xml result", result);
-               console.log("xml id", result.response.task[0].$.id);
-               taskId = result.response.task[0].$.id;
-           });
-
-           //this.timer = setInterval(()=> this.checkStatus(taskId), 1000);
-           this.poll(() => this.checkStatus(taskId), (result) => result != null, 300000, 2000 )
-           //this.poll(function(){return this.checkStatus(taskId);}, function(result){return result != null;} )
-             .then(
-               (result) => this.fetchTaskResult(result)
-             )
-             .catch( err => { console.log();(err); } )
-             ;
-         })
-         .catch(err => { console.log(err); })
-         ;
+         .then(response => response.text()) //get response xml
+         .then(xml => xml2JsParser(xml)) //parse xml object
+         .then(result => {
+           console.log("xml result", result);
+           console.log("xml id", result.response.task[0].$.id);
+           this.setState({ uploading: true, processMessage: "Processing Receipt ... " });
+           return result.response.task[0].$.id;
+         }) // get task id
+         .then(taskId => this.fetchTaskStatus(taskId, 1000)) //poll task until complete
+         .then(resultUrl => this.fetchTaskResult(resultUrl)) //result url
+         .catch(err => { console.log(err); });
        }
 
-{/*
+  {/*
     await FileSystem.moveAsync({
       from: photo.uri,
       to: `${FileSystem.documentDirectory}photos/${Date.now()}.jpg`,
@@ -227,43 +172,42 @@ export default class CameraScreen extends React.Component {
 
   }
 
-checkStatus = (taskId) => {
-  const config = {
-    method: 'GET',
-    headers: {
-      //Accept: 'application/xml',
-      Authorization: 'Basic ZmFwbF9yZWNlaXB0X3NjYW46UGdjZlVXblcvcERmVWFWVWRTOWQ5NHFl'
-    }
-  };
-  var complete = false;
-  var resultUrl = null;
-  const url = 'https://cloud.ocrsdk.com/getTaskStatus?taskId='+taskId;
-  fetch(url, config)
-   .then(response => {
-         return response.text()
-       })
-   .then(xml => {
-     var parseString = require('xml2js').parseString;
-     parseString(xml, function (err, result) {
-         console.log("xml task status:", result);
-         complete = result.response.task[0].$.status == "Completed";
-         if(complete)
-         {
-           resultUrl = result.response.task[0].$.resultUrl;
-           //this.resultUrl = result.response.task[0].$.resultUrl;
-           //this.timer = null;
-           //this.fetchTaskResult(resultUrl);
-         }
+  checkStatus = (taskId) => {
+    const config = {
+      method: 'GET',
+      headers: {
+        //Accept: 'application/xml',
+        Authorization: 'Basic ZmFwbF9yZWNlaXB0X3NjYW46UGdjZlVXblcvcERmVWFWVWRTOWQ5NHFl'
+      }
+    };
+    var complete = false;
+    var resultUrl = null;
+    const url = 'https://cloud.ocrsdk.com/getTaskStatus?taskId='+taskId;
+    fetch(url, config)
+     .then(response => { return response.text(); })
+     .then(xml => {
+          xml2JsParser(xml)
+         .then((result) => {
+           console.log("xml task status:", result);
+           complete = result.response.task[0].$.status == "Completed";
+           if(complete)
+           {
+             resultUrl = result.response.task[0].$.resultUrl;
+             //this.resultUrl = result.response.task[0].$.resultUrl;
+             //this.timer = null;
+             //this.fetchTaskResult(resultUrl);
+           }
+         })
+       .catch(err => { console.log(err); });
+     })
+     .catch(err => {
+       console.log(err);
+       result = true;
      });
-   })
-   .catch(err => {
-     console.log(err);
-     result = true;
-   });
-   return resultUrl;
- }
+     return resultUrl;
+   }
 
- poll = (fn, cnd, timeout, interval) => {
+  pollFetch = (fn, cnd, timeout, interval) => {
      var endTime = Number(new Date()) + (timeout || 2000);
      interval = interval || 100;
 
@@ -286,21 +230,80 @@ checkStatus = (taskId) => {
          }
      };
      return new Promise(checkCondition);
- }
+  }
 
-fetchTaskResult = (url) => {
-   console.log("xml task result url:", url);
-   fetch(url)
-    .then(response => {
-        return response.text();
-    })
-    .then(xml => {
-      var parseString = require('xml2js').parseString;
-      parseString(xml, function (err, result) {
-          console.log("xml receiptNo result:", result);
+  fetchTaskStatus = (taskId, interval) => {
+    interval = interval || 1000;
+    var getResult = function(resolve, reject) {
+      const config = {
+        method: 'GET',
+        headers: {
+          //Accept: 'application/xml',
+          Authorization: 'Basic ZmFwbF9yZWNlaXB0X3NjYW46UGdjZlVXblcvcERmVWFWVWRTOWQ5NHFl'
+        }
+      };
+      const url = 'https://cloud.ocrsdk.com/getTaskStatus?taskId='+taskId;
+      fetch(url, config)
+       .then(response => response.text())
+       .then(xml => xml2JsParser(xml))
+       .then(result => {
+         console.log("xml task status:", result);
+         const status = result.response.task[0].$.status;
+         complete = status == "Completed";
+         if(complete)
+         {
+           var resultUrl = result.response.task[0].$.resultUrl;
+           resolve(resultUrl);
+         }
+         else {
+          setTimeout(getResult, interval, resolve, reject);
+         }
+       })
+       .catch(err => { reject(err); });
+    };
+    return new Promise(getResult);
+  }
+
+  fetchTaskResult = (url) => {
+    this.setState({ uploading: true, processMessage: "Get Receipt Info... " });
+    console.log("xml task result url:", url);
+     fetch(url)
+      .then(response => response.text())
+      .then(xml => xml2JsParser(xml))
+      .then(result => {
+        //console.log("xml receipt result:", result.receipts.receipt);
+        console.log("xml receipt result:", result.receipts.receipt[0].total);
+        console.log("xml receipt result:", result.receipts.receipt[0].date[0].normalizedValue);
+        console.log("xml receipt result:", result.receipts.receipt[0].total[0].normalizedValue);
+        this.setState({ uploading: false, processMessage: "Completed." });
+        const total = result.receipts.receipt[0].total[0].normalizedValue;
+        const date = result.receipts.receipt[0].date[0].normalizedValue;
+        const receipt = { total, date };
+        this.props.navigation.getParam("setScannedReceipt", (receipt) => { return; })(receipt);
+        this.props.navigation.navigate('Form', {receipt});
       });
-    });
- }
+  }
+
+  _maybeRenderUploadingOverlay = () => {
+    if (this.state.uploading) {
+      return (
+        <View
+          style={[
+            StyleSheet.absoluteFill,
+            {
+              backgroundColor: 'rgba(0,0,0,0.7)',
+              alignItems: 'center',
+              justifyContent: 'center',
+            },
+          ]}>
+          <Text style={styles.overlayLabel} >
+            {this.state.processMessage}
+          </Text>
+          <ActivityIndicator color="#fff" animating size="large" />
+        </View>
+      );
+    }
+  };
 
   onBarCodeScanned = code => {
     this.setState(
@@ -525,7 +528,7 @@ fetchTaskResult = (url) => {
       ? this.renderCamera()
       : this.renderNoPermissions();
     const content = this.state.showGallery ? this.renderGallery() : cameraScreenContent;
-    return <View style={styles.container}>{content}</View>;
+    return <View style={styles.container}>{content} {this._maybeRenderUploadingOverlay()} </View>;
   }
 }
 
@@ -537,6 +540,10 @@ const styles = StyleSheet.create({
   camera: {
     flex: 1,
     justifyContent: 'space-between',
+  },
+  overlayLabel: {
+    backgroundColor: '#ffffff',
+    padding: 10,
   },
   topBar: {
     flex: 0.2,
@@ -663,3 +670,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
   },
 });
+
+const xml2JsParser = (xml) => {
+  return new Promise(function(resolve, reject)
+  {
+      var parseString = require('xml2js').parseString;
+      parseString(xml, function(err, result){
+           if(err){
+               reject(err);
+           }
+           else {
+               resolve(result);
+           }
+      });
+  });
+}

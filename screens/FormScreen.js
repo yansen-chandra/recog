@@ -289,7 +289,11 @@ export default class FormScreen extends Component {
     </View>
 
   scanFromGallery = () => {alert("Open Gallery");};
-  scanFromCamera = () => {this.props.navigation.navigate('Camera');};
+  scanFromCamera = () => {this.props.navigation.navigate('Camera', { setScannedReceipt: setScannedReceipt });};
+
+  setScannedReceipt = (receipt) => {
+    this.setState({ receiptAmount: receipt.total, receiptDate: receipt.date });
+  }
 
   createGuestInputs = () => {
     let inputs = [];
