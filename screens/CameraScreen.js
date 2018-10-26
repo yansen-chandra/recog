@@ -11,6 +11,8 @@ import {
 } from 'react-native';
 import GalleryScreen from './GalleryScreen';
 //import isIPhoneX from 'react-native-is-iphonex';
+//import RNFetchBlob from 'react-native-fetch-blob';
+import b64 from 'base64-js';
 
 import {
   Ionicons,
@@ -120,19 +122,185 @@ export default class CameraScreen extends React.Component {
 
   takePicture = () => {
     if (this.camera) {
-      this.camera.takePictureAsync({ onPictureSaved: this.onPictureSaved });
+      this.camera.takePictureAsync({ base64: true, onPictureSaved: this.onPictureSaved });
     }
   };
 
   handleMountError = ({ message }) => console.error(message);
 
   onPictureSaved = async photo => {
+
+      console.log(photo.uri);
+
+      if (photo.uri) {
+        var url = 'https://cloud.ocrsdk.com/processReceipt?exportFormat=xml&country=Singapore&imageSource=photo';
+
+
+{/*        RNFetchBlob.fetch('POST', url, {
+            'Content-Type' : 'application/octet-stream',
+            Authorization : 'Basic ZmFwbF9yZWNlaXB0X3NjYW46UGdjZlVXblcvcERmVWFWVWRTOWQ5NHFl'
+          }, photo.base64)
+          .then((res) => {
+            console.log(res.text())
+            return res.text();
+          })
+          .then(xml => {
+            var taskId = "";
+            var parseString = require('xml2js').parseString;
+            parseString(xml, function (err, result) {
+                console.log("xml result", result);
+                console.log("xml id", result.response.task[0].$.id);
+                taskId = result.response.task[0].$.id;
+            });
+            this.timer = setInterval(()=> this.checkStatus(taskId), 1000);
+          })
+          .catch((err) => {
+            // error handling ..
+          })
+
+        return;
+*/}
+
+          //alert(photo.base64);
+          //console.log('base64', photo.base64);
+          //const byteArray = b64.toByteArray(photo.base64);
+          // Create the form data object
+          var data = new FormData();
+          data.append('photo', { uri: photo.uri, name: 'receipt.jpg', type: 'image/jpg' });
+          const response = await fetch(photo.uri);
+          const blob = await response.blob();
+
+          // Create the config object for the POST
+          // You typically have an OAuth2 token that you use for authentication
+          const config = {
+            method: 'POST',
+            headers: {
+              Accept: 'application/xml',
+              'Content-Type': 'application/octec-stream;',
+              Authorization: 'Basic ZmFwbF9yZWNlaXB0X3NjYW46UGdjZlVXblcvcERmVWFWVWRTOWQ5NHFl'
+            },
+            body: blob
+          };
+
+        fetch(url, config)
+        //.then((response) => response.json())
+        //.then(responseData => {
+        //  console.log("Response Data: ");
+        //  console.log(responseData);
+        //  console.log("Response Text: ");
+        //  console.log(responseData.text());
+        //  alert(JSON.stringify(responseData));
+         //})
+         .then(response => {
+               return response.text()
+             })
+         .then(xml => {
+           console.log("task result", xml);
+           var taskId = "";
+           var parseString = require('xml2js').parseString;
+           parseString(xml, function (err, result) {
+               console.log("xml result", result);
+               console.log("xml id", result.response.task[0].$.id);
+               taskId = result.response.task[0].$.id;
+           });
+
+           //this.timer = setInterval(()=> this.checkStatus(taskId), 1000);
+           this.poll(() => this.checkStatus(taskId), (result) => result != null, 300000, 2000 )
+           //this.poll(function(){return this.checkStatus(taskId);}, function(result){return result != null;} )
+             .then(
+               (result) => this.fetchTaskResult(result)
+             )
+             .catch( err => { console.log();(err); } )
+             ;
+         })
+         .catch(err => { console.log(err); })
+         ;
+       }
+
+{/*
     await FileSystem.moveAsync({
       from: photo.uri,
       to: `${FileSystem.documentDirectory}photos/${Date.now()}.jpg`,
     });
     this.setState({ newPhotos: true });
+  */}
+
   }
+
+checkStatus = (taskId) => {
+  const config = {
+    method: 'GET',
+    headers: {
+      //Accept: 'application/xml',
+      Authorization: 'Basic ZmFwbF9yZWNlaXB0X3NjYW46UGdjZlVXblcvcERmVWFWVWRTOWQ5NHFl'
+    }
+  };
+  var complete = false;
+  var resultUrl = null;
+  const url = 'https://cloud.ocrsdk.com/getTaskStatus?taskId='+taskId;
+  fetch(url, config)
+   .then(response => {
+         return response.text()
+       })
+   .then(xml => {
+     var parseString = require('xml2js').parseString;
+     parseString(xml, function (err, result) {
+         console.log("xml task status:", result);
+         complete = result.response.task[0].$.status == "Completed";
+         if(complete)
+         {
+           resultUrl = result.response.task[0].$.resultUrl;
+           //this.resultUrl = result.response.task[0].$.resultUrl;
+           //this.timer = null;
+           //this.fetchTaskResult(resultUrl);
+         }
+     });
+   })
+   .catch(err => {
+     console.log(err);
+     result = true;
+   });
+   return resultUrl;
+ }
+
+ poll = (fn, cnd, timeout, interval) => {
+     var endTime = Number(new Date()) + (timeout || 2000);
+     interval = interval || 100;
+
+     var checkCondition = function(resolve, reject) {
+         // If the condition is met, we're done!
+         var result = fn();
+         console.log(result);
+         var stop = cnd(result);
+         console.log(stop);
+         if(stop) {
+             resolve(result);
+         }
+         // If the condition isn't met but the timeout hasn't elapsed, go again
+         else if (Number(new Date()) < endTime) {
+             setTimeout(checkCondition, interval, resolve, reject);
+         }
+         // Didn't match and too much time, reject!
+         else {
+             reject(new Error('timed out for ' + fn + ': ' + arguments));
+         }
+     };
+     return new Promise(checkCondition);
+ }
+
+fetchTaskResult = (url) => {
+   console.log("xml task result url:", url);
+   fetch(url)
+    .then(response => {
+        return response.text();
+    })
+    .then(xml => {
+      var parseString = require('xml2js').parseString;
+      parseString(xml, function (err, result) {
+          console.log("xml receiptNo result:", result);
+      });
+    });
+ }
 
   onBarCodeScanned = code => {
     this.setState(
@@ -322,6 +490,7 @@ export default class CameraScreen extends React.Component {
           ref={ref => {
             this.camera = ref;
           }}
+          base64={true}
           style={styles.camera}
           onCameraReady={this.collectPictureSizes}
           type={this.state.type}
