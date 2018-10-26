@@ -276,8 +276,8 @@ export default class CameraScreen extends React.Component {
         console.log("xml receipt result:", result.receipts.receipt[0].date[0].normalizedValue);
         console.log("xml receipt result:", result.receipts.receipt[0].total[0].normalizedValue);
         this.setState({ uploading: false, processMessage: "Completed." });
-        const total = result.receipts.receipt[0].total[0].normalizedValue;
-        const date = result.receipts.receipt[0].date[0].normalizedValue;
+        const total = result.receipts.receipt[0].total[0].normalizedValue[0];
+        const date = result.receipts.receipt[0].date[0].normalizedValue[0];
         const receipt = { total, date };
         this.props.navigation.getParam("setScannedReceipt", (receipt) => { return; })(receipt);
         this.props.navigation.navigate('Form', {receipt});
