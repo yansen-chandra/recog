@@ -29,6 +29,20 @@ export default class FormScreen extends Component {
     //receiptDateHide: true,
   };
 
+  componentDidMount(){
+   this.load()
+   this.props.navigation.addListener('willFocus', this.load)
+  }
+
+  load = () => {
+    const receipt = this.props.navigation.getParam("receipt", null);
+    console.log(receipt);
+    if(receipt)
+    {
+      this.setState({ receiptAmount: receipt.total, receiptDate: receipt.date });
+    }
+  }
+
   render() {
     return (
       <ScrollView style={styles.container}>
@@ -289,7 +303,7 @@ export default class FormScreen extends Component {
     </View>
 
   scanFromGallery = () => {alert("Open Gallery");};
-  scanFromCamera = () => {this.props.navigation.navigate('Camera', { setScannedReceipt: setScannedReceipt });};
+  scanFromCamera = () => {this.props.navigation.navigate('Camera', { setScannedReceipt: this.setScannedReceipt });};
 
   setScannedReceipt = (receipt) => {
     this.setState({ receiptAmount: receipt.total, receiptDate: receipt.date });

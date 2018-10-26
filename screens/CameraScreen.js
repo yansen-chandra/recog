@@ -13,7 +13,8 @@ import {
 import GalleryScreen from './GalleryScreen';
 //import isIPhoneX from 'react-native-is-iphonex';
 //import RNFetchBlob from 'react-native-fetch-blob';
-import b64 from 'base64-js';
+//import B64 from 'base64-js';
+import Base64 from 'react-native-base64';
 
 import {
   Ionicons,
@@ -135,6 +136,13 @@ export default class CameraScreen extends React.Component {
       console.log('captured photo : ', photo.uri);
       if (photo.uri) {
         this.setState({ uploading: true, processMessage: "Uploading Receipt ..." });
+
+        this.fetchTaskStatus('8542cf32-cc91-44cc-9f0e-c53a4d135325')
+        .then(resultUrl => this.fetchTaskResult(resultUrl))
+        .catch(err => { console.log(err); });
+        return;
+
+
         const url = 'https://cloud.ocrsdk.com/processReceipt?exportFormat=xml&country=Singapore&imageSource=photo';
         const response = await fetch(photo.uri);
         const blob = await response.blob();
@@ -143,7 +151,7 @@ export default class CameraScreen extends React.Component {
           headers: {
             Accept: 'application/xml',
             'Content-Type': 'application/octec-stream;',
-            Authorization: 'Basic ZmFwbF9yZWNlaXB0X3NjYW46UGdjZlVXblcvcERmVWFWVWRTOWQ5NHFl'
+            Authorization: getAuthString()//'Basic ZmFwbF9yZWNlaXB0X3NjYW46UGdjZlVXblcvcERmVWFWVWRTOWQ5NHFl'
           },
           body: blob
         };
@@ -177,7 +185,7 @@ export default class CameraScreen extends React.Component {
       method: 'GET',
       headers: {
         //Accept: 'application/xml',
-        Authorization: 'Basic ZmFwbF9yZWNlaXB0X3NjYW46UGdjZlVXblcvcERmVWFWVWRTOWQ5NHFl'
+        Authorization: getAuthString() // 'Basic ZmFwbF9yZWNlaXB0X3NjYW46UGdjZlVXblcvcERmVWFWVWRTOWQ5NHFl'
       }
     };
     var complete = false;
@@ -239,7 +247,7 @@ export default class CameraScreen extends React.Component {
         method: 'GET',
         headers: {
           //Accept: 'application/xml',
-          Authorization: 'Basic ZmFwbF9yZWNlaXB0X3NjYW46UGdjZlVXblcvcERmVWFWVWRTOWQ5NHFl'
+          Authorization: getAuthString()//'Basic ZmFwbF9yZWNlaXB0X3NjYW46UGdjZlVXblcvcERmVWFWVWRTOWQ5NHFl'
         }
       };
       const url = 'https://cloud.ocrsdk.com/getTaskStatus?taskId='+taskId;
@@ -271,16 +279,16 @@ export default class CameraScreen extends React.Component {
       .then(response => response.text())
       .then(xml => xml2JsParser(xml))
       .then(result => {
-        //console.log("xml receipt result:", result.receipts.receipt);
         console.log("xml receipt result:", result.receipts.receipt[0].total);
         console.log("xml receipt result:", result.receipts.receipt[0].date[0].normalizedValue);
         console.log("xml receipt result:", result.receipts.receipt[0].total[0].normalizedValue);
         this.setState({ uploading: false, processMessage: "Completed." });
-        const total = result.receipts.receipt[0].total[0].normalizedValue[0];
-        const date = result.receipts.receipt[0].date[0].normalizedValue[0];
-        const receipt = { total, date };
-        this.props.navigation.getParam("setScannedReceipt", (receipt) => { return; })(receipt);
-        this.props.navigation.navigate('Form', {receipt});
+        let rec = result.receipts.receipt[0];
+        const total = rec.total[0].normalizedValue[0];
+        const date =  rec.date ? rec.date[0].normalizedValue[0] : null;
+        const receipt = { total, date : date ? new Date(date) : null };
+        //this.props.navigation.getParam("setScannedReceipt", (receipt) => { return; })(receipt);
+        this.props.navigation.navigate('Form', {receipt: receipt});
       });
   }
 
@@ -544,6 +552,7 @@ const styles = StyleSheet.create({
   overlayLabel: {
     backgroundColor: '#ffffff',
     padding: 10,
+    marginBottom: 20,
   },
   topBar: {
     flex: 0.2,
@@ -684,4 +693,13 @@ const xml2JsParser = (xml) => {
            }
       });
   });
+}
+
+const getAuthString = (appid,password) => {
+  appid = appid || 'aileronstahn1';
+  password = password || 'gbQgnNINdFG5G2UHyipTiF1n';
+  var text = `${appid}:${password}`;
+  console.log(text);
+  var encoded = Base64.encode(text);
+  return  `Basic ${encoded}`;
 }
