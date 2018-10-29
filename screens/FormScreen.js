@@ -1,12 +1,18 @@
 import React, { Component } from 'react';
-import { ScrollView, Text, StatusBar, TextInput, View, StyleSheet, DatePickerIOS, Picker, Label, Keyboard,TouchableOpacity } from 'react-native';
+import {
+  ScrollView,
+  Text,
+  StatusBar, TextInput, View, StyleSheet,
+  DatePickerIOS, Platform,
+  Picker, Label,
+  Keyboard, TouchableOpacity
+} from 'react-native';
 import { Constants } from 'expo';
 
 export default class FormScreen extends Component {
   static navigationOptions = {
-    title: 'Add Receipt',
+    title: 'Edit Receipt Details',
   };
-
   state = {
     //data: {
     //},
@@ -24,218 +30,40 @@ export default class FormScreen extends Component {
     noOfGuest: "5",
     guestNames: [],
     noOfStaff: "0",
-    //typePickerHide: true,
-    //reasonPickerHide: true,
-    //receiptDateHide: true,
+    typePickerHide: true,
+    reasonPickerHide: true,
+    receiptDateHide: true,
   };
 
   componentDidMount(){
+   console.log('form did mount');
    this.load()
    this.props.navigation.addListener('willFocus', this.load)
   }
-
   load = () => {
+    console.log('form load');
     const receipt = this.props.navigation.getParam("receipt", null);
-    console.log(receipt);
+    console.log('form receipt', receipt);
     if(receipt)
     {
-      this.setState({ receiptAmount: receipt.total, receiptDate: receipt.date });
+      this.setState({
+        receiptAmount: receipt.total,
+        receiptDate: receipt.date ? receipt.date : new Date() });
     }
   }
 
   render() {
     return (
       <ScrollView style={styles.container}>
-        {this.renderTopBar()}
         <StatusBar barStyle="light-content" />
-        {/*<View style={styles.header}>
+        {/*
+          <View style={styles.header}>
           <Text style={styles.description}>
             Receipt Input Form
           </Text>
-        </View>*/}
-        <TextInput
-          style={styles.input}
-          value={this.state.costCenter}
-          onChangeText={text => this.setState({ costCenter: text})}
-          ref={ref => {this._InputCostCenter = ref}}
-          placeholder="Enter Cost Center"
-          autoFocus={false}
-          autoCapitalize="words"
-          autoCorrect={false}
-          keyboardType="default"
-          returnKeyType="go"
-          onSubmitEditing={this._next}
-          blurOnSubmit={false}
-        />
-        <TextInput
-          style={styles.input}
-          value={this.state.wbsElement}
-          onChangeText={text => this.setState({ wbsElement: text})}
-          ref={ref => {this._inputWbsElement = ref}}
-          placeholder="Enter Project WBS Element"
-          autoCapitalize="none"
-          autoCorrect={false}
-          keyboardType="default"
-          returnKeyType="next"
-          onSubmitEditing={this._next}
-          blurOnSubmit={false}
-        />
-        <TextInput
-          style={styles.input}
-          value={this.state.noOfGuest}
-          onChangeText={text => {
-            this.setState({ noOfGuest: text, amountPerHead: this.calcAmountPerHead(), guestNames: []});
-          }}
-          ref={ref => {this._inputWbsElement = ref}}
-          placeholder="Enter No of Guest"
-          autoCapitalize="none"
-          autoCorrect={false}
-          keyboardType="number-pad"
-          returnKeyType="next"
-          onSubmitEditing={this._next}
-          blurOnSubmit={false}
-        />
-        {this.createGuestInputs()}
-        <TextInput
-          style={styles.input}
-          value={this.state.noOfStaff}
-          onChangeText={text => {
-            this.setState({ noOfStaff: text, amountPerHead: this.calcAmountPerHead() });
-          }}
-          ref={ref => {this._inputWbsElement = ref}}
-          placeholder="Enter No of Staff"
-          autoCapitalize="none"
-          autoCorrect={false}
-          keyboardType="number-pad"
-          returnKeyType="next"
-          onSubmitEditing={this._next}
-          blurOnSubmit={false}
-        />
-        <TextInput
-          style={styles.input}
-          value={this.state.receiptNo}
-          onChangeText={text => this.setState({ receiptNo: text})}
-          ref={ref => {this._inputReceiptNo = ref}}
-          placeholder="Enter Receipt No"
-          autoCapitalize="none"
-          autoCorrect={false}
-          keyboardType="default"
-          returnKeyType="next"
-          onSubmitEditing={this._next}
-          blurOnSubmit={false}
-        />
-        <View style={styles.section}>
-          <Text style={styles.inputLabel}>
-            Receipt Date *
-          </Text>
-{/*          <TextInput
-            style={styles.input}
-            value={this.state.receiptDate}
-            onChangeText={text => this.setState({ receiptDate: text})}
-            ref={ref => {this._inputReceiptDate = ref}}
-            placeholder="dd/MMM/yyyy"
-            onFocus={() => this.setState({receiptDateHide: false}) }
-          />*/}
-          <DatePickerIOS mode="date"
-               date={this.state.receiptDate}
-               onDateChange={value => this.setState({ receiptDate: value})}
-           />
         </View>
-
-        <View style={styles.section}>
-          <Text style={styles.inputLabel}>
-            Type *
-          </Text>
-          <TextInput
-            style={styles.input}
-            value={this.state.type}
-            onChangeText={type => this.setState({ type: type})}
-            ref={ref => {this._inputType = ref}}
-            placeholder="Select Type"
-            onFocus={() => this.setState({typePickerHide: false}) }
-          />
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.inputLabel}>
-            Reason *
-          </Text>
-          <TextInput
-            style={styles.input}
-            value={this.state.reason}
-            onChangeText={reason => this.setState({ reason: reason})}
-            ref={ref => {this._inputReason = ref}}
-            placeholder="Select Reason"
-            onFocus={() => this.setState({reasonPickerHide: false}) }
-          />
-        </View>
-
-        <Text style={styles.inputLabel}>
-          Receipt Amount *
-        </Text>
-        <TextInput
-          style={styles.input}
-          value={this.state.receiptAmount}
-          onChangeText={text => this.setState({ receiptAmount: text, amount: text, amountPerHead: this.calcAmountPerHead() })}
-          ref={ref => {this._inputReceiptAmount = ref}}
-          placeholder="Enter Receipt Amount"
-          autoCapitalize="none"
-          autoCorrect={false}
-          keyboardType="number-pad"
-          returnKeyType="done"
-          onSubmitEditing={this._submit}
-          blurOnSubmit={true}
-        />
-
-        <Text style={styles.inputLabel}>
-          Amount
-        </Text>
-        <TextInput
-          editable={false}
-          style={styles.inputDisabled}
-          value={this.state.amount}
-          placeholder="Receipt Amount"
-        />
-
-        <Text style={styles.inputLabel}>
-          Amount Per Head
-        </Text>
-        <TextInput
-          editable={false}
-          style={styles.inputDisabled}
-          value={this.state.amountPerHead}
-          placeholder="Amount Per Head"
-        />
-
-        {/*
-                  <Picker
-                    selectedValue={this.state.reason}
-                    style={{ height: 50, width: 100 }} mode="dialog"
-                    onValueChange={(itemValue, itemIndex) => this.setState({reason: itemValue})}>
-                    <Picker.Item label="Collaborators / Industry Partner" value="CollaboratorIndustryPartner" />
-                    <Picker.Item label="Host Conference Speaker" value="HostConverenceSpeaker" />
-                    <Picker.Item label="Meeting / Discussion" value="MeetingDiscussion" />
-                  </Picker>
         */}
-
-
-        {/*
-        <Picker hide={this.state.typePickerHide}
-          selectedValue={this.state.type}
-          style={{ height: 50, width: 100 }} mode="dialog"
-          onValueChange={(itemValue, itemIndex) => this.setState({type: itemValue})}>
-          <Picker.Item label="BREAKFAST" value="BREAKFAST" />
-          <Picker.Item label="DINNER" value="DINNER" />
-          <Picker.Item label="LUNCH" value="LUNCH" />
-          <Picker.Item label="REFRESHMENT" value="REFRESHMENT" />
-          <Picker.Item label="TEA" value="TEA" />
-        </Picker>
-        */}
-
-
-
-
-
+        {this._renderForm()}
         <TouchableOpacity
              style = {styles.submitButton}
              onPress = {this._submit}
@@ -260,7 +88,7 @@ export default class FormScreen extends Component {
   calcAmountPerHead()
   {
     var result = (parseFloat(this.state.amount) / (parseFloat(this.state.noOfGuest) + parseFloat(this.state.noOfStaff))).toString();
-    alert(`${parseFloat(this.state.noOfGuest) + parseFloat(this.state.noOfStaff)} - ${result}`);
+    //alert(`${parseFloat(this.state.noOfGuest) + parseFloat(this.state.noOfStaff)} - ${result}`);
     return result;
   }
 
@@ -291,7 +119,219 @@ export default class FormScreen extends Component {
     }
   }
 
-  renderTopBar = () =>
+  _renderForm = () => {
+      let dateinputcontent = Platform.OS === 'ios'?
+        <DatePickerIOS mode="date"
+             date={this.state.receiptDate}
+             onDateChange={value => this.setState({ receiptDate: value, receiptDateHide: true})}
+         />
+      :
+          <TextInput
+            style={styles.input}
+            value={this.state.receiptDate}
+            onChangeText={text => this.setState({ receiptDate: text, receiptDateHide: true})}
+            ref={ref => {this._inputReceiptDate = ref}}
+            placeholder="dd/MMM/yyyy"
+            //onFocus={() => this.setState({receiptDateHide: false}) }
+          />
+      ;
+
+      let dateinput = this.state.receiptDateHide ? <Text/> : dateinputcontent;
+
+      let reasonPicker =
+       this.state.reasonPickerHide ? <Text/> :
+        <Picker
+          selectedValue={this.state.reason}
+          mode="dialog"
+          onValueChange={(itemValue, itemIndex) => {this.setState({reason: itemValue, reasonPickerHide: true}) } }>
+          <Picker.Item label="Collaborators / Industry Partner" value="CollaboratorIndustryPartner" />
+          <Picker.Item label="Host Conference Speaker" value="HostConverenceSpeaker" />
+          <Picker.Item label="Meeting / Discussion" value="MeetingDiscussion" />
+        </Picker>
+      ;
+
+      let typePicker =
+       this.state.typePickerHide ? <Text/> :
+       <Picker
+         selectedValue={this.state.type}
+         //style={{ height: 50, width: 100 }}
+         mode="dialog"
+         onValueChange={(itemValue, itemIndex) => {this.setState({type: itemValue, typePickerHide: true}) } }>
+         <Picker.Item label="BREAKFAST" value="BREAKFAST" />
+         <Picker.Item label="DINNER" value="DINNER" />
+         <Picker.Item label="LUNCH" value="LUNCH" />
+         <Picker.Item label="REFRESHMENT" value="REFRESHMENT" />
+         <Picker.Item label="TEA" value="TEA" />
+       </Picker>
+      ;
+
+    return (
+    <View>
+    <Text style={styles.inputLabel}>
+      Cont Center *
+    </Text>
+    <TextInput
+      style={styles.input}
+      value={this.state.costCenter}
+      onChangeText={text => this.setState({ costCenter: text})}
+      ref={ref => {this._InputCostCenter = ref}}
+      placeholder="Enter Cost Center"
+      autoFocus={false}
+      autoCapitalize="words"
+      autoCorrect={false}
+      keyboardType="default"
+      returnKeyType="done"
+      onSubmitEditing={this._next}
+      blurOnSubmit={false}
+    />
+    <Text style={styles.inputLabel}>
+      WBS Element *
+    </Text>
+    <TextInput
+      style={styles.input}
+      value={this.state.wbsElement}
+      onChangeText={text => this.setState({ wbsElement: text})}
+      ref={ref => {this._inputWbsElement = ref}}
+      placeholder="Enter Project WBS Element"
+      autoCapitalize="none"
+      autoCorrect={false}
+      keyboardType="default"
+      returnKeyType="done"
+      onSubmitEditing={this._next}
+      blurOnSubmit={false}
+    />
+    <Text style={styles.inputLabel}>
+      No of Guest
+    </Text>
+    <TextInput
+      style={styles.input}
+      value={this.state.noOfGuest}
+      onChangeText={text => {
+        this.setState({ noOfGuest: text, guestNames: []});
+      }}
+      ref={ref => {this._inputWbsElement = ref}}
+      placeholder="Enter No of Guest"
+      autoCapitalize="none"
+      autoCorrect={false}
+      keyboardType="number-pad"
+      returnKeyType="done"
+      onSubmitEditing={this._next}
+      blurOnSubmit={false}
+    />
+    <Text style={styles.inputLabel}>
+      Guest Information
+    </Text>
+    {this.createGuestInputs()}
+    <Text style={styles.inputLabel}>
+      No of Staff
+    </Text>
+    <TextInput
+      style={styles.input}
+      value={this.state.noOfStaff}
+      onChangeText={text => {
+        this.setState({ noOfStaff: text });
+      }}
+      ref={ref => {this._inputWbsElement = ref}}
+      placeholder="Enter No of Staff"
+      autoCapitalize="none"
+      autoCorrect={false}
+      keyboardType="number-pad"
+      returnKeyType="done"
+      onSubmitEditing={this._next}
+      blurOnSubmit={false}
+    />
+
+    <View style={styles.section}>
+      <Text style={styles.inputLabel}>
+        Type *
+      </Text>
+      <TouchableOpacity style={styles.inputButton} onPress={() => { this.setState({typePickerHide: false});  }}>
+        <Text>{this.state.type ? this.state.type : "-- Choose Type --"}</Text>
+      </TouchableOpacity>
+      {typePicker}
+    </View>
+
+    <View style={styles.section}>
+      <Text style={styles.inputLabel}>
+        Reason *
+      </Text>
+      <TouchableOpacity style={styles.inputButton} onPress={() => { this.setState({reasonPickerHide: false});  }}>
+        <Text>{this.state.reason ? this.state.reason : "-- Choose Reason --"}</Text>
+      </TouchableOpacity>
+      {reasonPicker}
+    </View>
+
+    <Text style={styles.inputLabel}>
+      Receipt No
+    </Text>
+    <TextInput
+      style={styles.input}
+      value={this.state.receiptNo}
+      onChangeText={text => this.setState({ receiptNo: text})}
+      ref={ref => {this._inputReceiptNo = ref}}
+      placeholder="Enter Receipt No"
+      autoCapitalize="none"
+      autoCorrect={false}
+      keyboardType="default"
+      returnKeyType="done"
+      onSubmitEditing={this._next}
+      blurOnSubmit={false}
+    />
+    <View style={styles.section}>
+      <Text style={styles.inputLabel}>
+        Receipt Date *
+      </Text>
+{/*      <TouchableOpacity style={styles.inputButton} onPress={() => { this.setState({receiptDateHide: false});  }}>
+        <Text>{this.state.receiptDate ? this.state.receiptDate.toString() : "-- Pick Date --"}</Text>
+      </TouchableOpacity>
+*/}
+      {dateinputcontent}
+    </View>
+
+    <Text style={styles.inputLabel}>
+      Receipt Amount *
+    </Text>
+    <TextInput
+      style={styles.input}
+      value={this.state.receiptAmount}
+      onChangeText={text => this.setState({ receiptAmount: text })}
+      ref={ref => {this._inputReceiptAmount = ref}}
+      placeholder="Enter Receipt Amount"
+      autoCapitalize="none"
+      autoCorrect={false}
+      keyboardType="number-pad"
+      returnKeyType="done"
+      onSubmitEditing={this._submit}
+      blurOnSubmit={true}
+    />
+
+    <Text style={styles.inputLabel}>
+      Amount
+    </Text>
+    <TextInput
+      editable={false}
+      style={styles.inputDisabled}
+      value={this.state.receiptAmount}
+      placeholder="Receipt Amount"
+    />
+
+    <Text style={styles.inputLabel}>
+      Amount Per Head
+    </Text>
+    <TextInput
+      editable={false}
+      style={styles.inputDisabled}
+      value={(parseFloat(this.state.amount) / (parseFloat(this.state.noOfGuest) + parseFloat(this.state.noOfStaff))).toString()}
+      placeholder="Amount Per Head"
+    />
+
+    </View>
+
+    );
+
+  };
+
+  _renderTopBar = () =>
     <View
       style={styles.topBar}>
       <TouchableOpacity style={styles.toggleButton} onPress={this.scanFromGallery}>
@@ -327,7 +367,7 @@ export default class FormScreen extends Component {
             this.forceUpdate();
           }}
           ref={ref => {this[name] = ref}}
-          placeholder={`Enter Guest ${i} Name / Designation / Company`}
+          placeholder={`Enter Guest ${i+1} Name / Designation / Company`}
           autoCapitalize="none"
           autoCorrect={false}
           keyboardType="default"
@@ -357,6 +397,15 @@ const styles = StyleSheet.create({
     color: 'white',
   },
 
+  inputButton: {
+    margin: 20,
+    marginTop: 0,
+    height: 34,
+    padding: 7,
+    borderRadius: 4,
+    borderColor: '#ccc',
+    borderWidth: 1,
+  },
   input: {
     margin: 20,
     marginTop: 0,
@@ -380,11 +429,12 @@ const styles = StyleSheet.create({
   },
   inputLabel: {
     marginLeft:20,
+    marginBottom:5,
   },
   section: {
   },
   submitButton: {
-     backgroundColor: '#7a42f4',
+     backgroundColor: 'rgba(5,165,209,.8)',
      padding: 10,
      margin: 15,
      height: 40,
@@ -430,14 +480,14 @@ const lutypes = [
     }
   ];
 
-  const lureasons = [
-      {
-        label: 'Collaborators / Industry Partner'
-      },
-      {
-        label: 'Host Conference Speaker'
-      },
-      {
-        label: 'Meeting / Discussion'
-      },
-    ];
+const lureasons = [
+    {
+      label: 'Collaborators / Industry Partner'
+    },
+    {
+      label: 'Host Conference Speaker'
+    },
+    {
+      label: 'Meeting / Discussion'
+    },
+  ];

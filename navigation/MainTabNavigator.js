@@ -33,11 +33,11 @@ const LinksStack = createStackNavigator({
 });
 
 LinksStack.navigationOptions = {
-  tabBarLabel: 'Links',
+  tabBarLabel: 'Capture',
   tabBarIcon: ({ focused }) => (
     <TabBarIcon
       focused={focused}
-      name={Platform.OS === 'ios' ? `ios-link${focused ? '' : '-outline'}` : 'md-link'}
+      name={Platform.OS === 'ios' ? `ios-barcode${focused ? '' : '-outline'}` : 'md-barcode'}
     />
   ),
 };
@@ -99,10 +99,10 @@ FormStack.navigationOptions = {
 };
 
 export default createBottomTabNavigator({
+  LinksStack,
   FormStack,
+  //CameraStack,
   //HomeStack,
-  //LinksStack,
   //SettingsStack,
   //ScanStack,
-  CameraStack,
 });
