@@ -62,8 +62,8 @@ export default class App extends React.Component {
           title="Take a photo" />
 
         <Button
-          onPress={this._goToForm}
-          title="Enter Manually" />
+          onPress={this._recognizeImageDummy}
+          title="Sample Receipt" />
 
         {this._maybeRenderImage()}
         {this._maybeRenderUploadingOverlay()}
@@ -85,6 +85,9 @@ export default class App extends React.Component {
               justifyContent: 'center',
             },
           ]}>
+          <Text style={styles.overlayLabel} >
+            {this.state.processMessage}
+          </Text>
           <ActivityIndicator color="#fff" animating size="large" />
         </View>
       );
@@ -154,6 +157,7 @@ export default class App extends React.Component {
       quality: 0.2,
     });
 
+    this.setState({ uploading: true });
     this._handleImagePicked(pickerResult);
   };
 
@@ -163,6 +167,7 @@ export default class App extends React.Component {
       //aspect: [4, 3],
     });
 
+    this.setState({ uploading: true });
     this._handleImagePicked(pickerResult);
   };
 
@@ -187,24 +192,27 @@ export default class App extends React.Component {
     this.props.navigation.navigate('Form', {receipt});
   };
 
+  _recognizeImageDummy = async () => {
+
+    this._fetchTaskStatus('5d5f41ad-c2fd-493c-8555-1c109c80a18c')
+      .then(resultUrl => this._fetchTaskResult(resultUrl))
+      .then(receipt => {
+        //this.props.navigation.getParam("setScannedReceipt", (receipt) => { return; })(receipt);
+        console.log('parsed receipt', receipt);
+        this._goToForm(receipt);
+      })
+      .catch(err => {
+        console.log(err);
+        alert(err);
+        this.setState({ uploading: false });
+      });
+
+  };
+
   _recognizeImage = async () => {
     uri = this.state.image;
     if (uri) {
         this.setState({ uploading: true, processMessage: "Uploading Receipt ..." });
-
-       this._fetchTaskStatus('5d5f41ad-c2fd-493c-8555-1c109c80a18c')
-         .then(resultUrl => this._fetchTaskResult(resultUrl))
-         .then(receipt => {
-           //this.props.navigation.getParam("setScannedReceipt", (receipt) => { return; })(receipt);
-           console.log('parsed receipt', receipt);
-           this._goToForm(receipt);
-         })
-         .catch(err => {
-           console.log(err);
-           alert(err);
-           this.setState({ uploading: false });
-         });
-       return;
 
       const url = 'https://cloud.ocrsdk.com/processReceipt?exportFormat=xml&country=Singapore&imageSource=photo';
       const response = await fetch(uri);
@@ -402,5 +410,10 @@ const styles = StyleSheet.create({
   helpLinkText: {
     fontSize: 14,
     color: '#2e78b7',
+  },
+  overlayLabel: {
+    backgroundColor: '#ffffff',
+    padding: 10,
+    marginBottom: 20,
   },
 });

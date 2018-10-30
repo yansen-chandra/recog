@@ -5,9 +5,10 @@ import {
   StatusBar, TextInput, View, StyleSheet,
   DatePickerIOS, Platform,
   Picker, Label,
-  Keyboard, TouchableOpacity
+  Keyboard, TouchableOpacity, Alert,
 } from 'react-native';
 import { Constants } from 'expo';
+import { email } from 'react-native-communications';
 
 export default class FormScreen extends Component {
   static navigationOptions = {
@@ -48,7 +49,9 @@ export default class FormScreen extends Component {
     {
       this.setState({
         receiptAmount: receipt.total,
-        receiptDate: receipt.date ? receipt.date : new Date() });
+        receiptDate: receipt.date ? receipt.date : new Date()
+      });
+      this._calcAmountPerHead({receiptAmount: receipt.total});
     }
   }
 
@@ -85,11 +88,17 @@ export default class FormScreen extends Component {
     this.setState({selectedDate: newDate})
   }
 
-  calcAmountPerHead()
+  _calcAmountPerHead = (rec) =>
   {
-    var result = (parseFloat(this.state.amount) / (parseFloat(this.state.noOfGuest) + parseFloat(this.state.noOfStaff))).toString();
-    //alert(`${parseFloat(this.state.noOfGuest) + parseFloat(this.state.noOfStaff)} - ${result}`);
-    return result;
+    rec = rec || {};
+    this.setState({amount: rec.receiptAmount || this.state.amount});
+    var result =
+      ( parseFloat(rec.receiptAmount || this.state.amount )
+        / ( parseFloat(rec.noOfGuest || this.state.noOfGuest ) + parseFloat( rec.noOfStaff || this.state.noOfStaff ))
+      ).toFixed(2)
+    ;
+    this.setState({amountPerHead: result});
+    return result.toString();
   }
 
   _next = () => {
@@ -102,13 +111,23 @@ export default class FormScreen extends Component {
   };
 
   _submit = async () => {
-    alert(`Parsed form : ${JSON.stringify(this.state)}!`);
-    let result = await this.sendResult();
-    alert(JSON.stringify(result));
+    let data = JSON.stringify(this.state, null, 4);
+    Alert.alert(
+      'Receipt Flat Data',
+      data,
+      [
+        {text: 'Close', onPress: () => console.log('Cancel Pressed'), style: 'cancel'},
+        {text: 'Send Email', onPress: () => email(['yansen.chandra@sg.fujitsu.com'], null, null, 'Receipt Scan Result', data)},
+      ],
+      { cancelable: false }
+    )
+    //let result = await this.sendResult();
+    //alert(JSON.stringify(result));
   };
 
   async sendResult() {
     try {
+
       let response = await fetch(
         'https://facebook.github.io/react-native/movies.json'
       );
@@ -117,6 +136,44 @@ export default class FormScreen extends Component {
     } catch (error) {
       console.error(error);
     }
+  }
+
+  _createGuestInputs = () => {
+    let inputs = [];
+    if(this.state.noOfGuest && this.state.noOfGuest > 0)
+      this.setState((state) => {guestNames: new Array(parseInt(state.noOfGuest))});
+    for (let i = 0; i < this.state.noOfGuest; i++) {
+      //this.state.guestNames.push('');
+      var name = `_inputGuestName${i}`;
+      inputs.push(
+        <Text key={`text${name}`} style={styles.inputLabel}>
+          Guest Name {(i+1).toString()}
+        </Text>
+      );
+      inputs.push(
+        <TextInput
+          key={name}
+          style={styles.input}
+          value={this.state.guestNames[i]}
+          onChangeText={text => {
+            //this.setState({guestNames[i]: text})
+            const items = this.state.guestNames;
+            items[i] = text;
+            // re-render
+            this.forceUpdate();
+          }}
+          ref={ref => {this[name] = ref}}
+          placeholder={`Enter Guest ${i+1} Name / Designation / Company`}
+          autoCapitalize="none"
+          autoCorrect={false}
+          keyboardType="default"
+          returnKeyType="done"
+          onSubmitEditing={() => Keyboard.dismiss()}
+          blurOnSubmit={false}
+        />
+      );
+    }
+    return inputs;
   }
 
   _renderForm = () => {
@@ -167,218 +224,173 @@ export default class FormScreen extends Component {
 
     return (
     <View>
-    <Text style={styles.inputLabel}>
-      Cont Center *
-    </Text>
-    <TextInput
-      style={styles.input}
-      value={this.state.costCenter}
-      onChangeText={text => this.setState({ costCenter: text})}
-      ref={ref => {this._InputCostCenter = ref}}
-      placeholder="Enter Cost Center"
-      autoFocus={false}
-      autoCapitalize="words"
-      autoCorrect={false}
-      keyboardType="default"
-      returnKeyType="done"
-      onSubmitEditing={this._next}
-      blurOnSubmit={false}
-    />
-    <Text style={styles.inputLabel}>
-      WBS Element *
-    </Text>
-    <TextInput
-      style={styles.input}
-      value={this.state.wbsElement}
-      onChangeText={text => this.setState({ wbsElement: text})}
-      ref={ref => {this._inputWbsElement = ref}}
-      placeholder="Enter Project WBS Element"
-      autoCapitalize="none"
-      autoCorrect={false}
-      keyboardType="default"
-      returnKeyType="done"
-      onSubmitEditing={this._next}
-      blurOnSubmit={false}
-    />
-    <Text style={styles.inputLabel}>
-      No of Guest
-    </Text>
-    <TextInput
-      style={styles.input}
-      value={this.state.noOfGuest}
-      onChangeText={text => {
-        this.setState({ noOfGuest: text, guestNames: []});
-      }}
-      ref={ref => {this._inputWbsElement = ref}}
-      placeholder="Enter No of Guest"
-      autoCapitalize="none"
-      autoCorrect={false}
-      keyboardType="number-pad"
-      returnKeyType="done"
-      onSubmitEditing={this._next}
-      blurOnSubmit={false}
-    />
-    <Text style={styles.inputLabel}>
-      Guest Information
-    </Text>
-    {this.createGuestInputs()}
-    <Text style={styles.inputLabel}>
-      No of Staff
-    </Text>
-    <TextInput
-      style={styles.input}
-      value={this.state.noOfStaff}
-      onChangeText={text => {
-        this.setState({ noOfStaff: text });
-      }}
-      ref={ref => {this._inputWbsElement = ref}}
-      placeholder="Enter No of Staff"
-      autoCapitalize="none"
-      autoCorrect={false}
-      keyboardType="number-pad"
-      returnKeyType="done"
-      onSubmitEditing={this._next}
-      blurOnSubmit={false}
-    />
 
-    <View style={styles.section}>
+      <View style={styles.section}>
+        <Text style={styles.inputLabel}>
+          Receipt Date *
+        </Text>
+  {/*      <TouchableOpacity style={styles.inputButton} onPress={() => { this.setState({receiptDateHide: false});  }}>
+          <Text>{this.state.receiptDate ? this.state.receiptDate.toString() : "-- Pick Date --"}</Text>
+        </TouchableOpacity>
+  */}
+        {dateinputcontent}
+      </View>
+
       <Text style={styles.inputLabel}>
-        Type *
+        Receipt Amount *
       </Text>
-      <TouchableOpacity style={styles.inputButton} onPress={() => { this.setState({typePickerHide: false});  }}>
-        <Text>{this.state.type ? this.state.type : "-- Choose Type --"}</Text>
-      </TouchableOpacity>
-      {typePicker}
-    </View>
+      <TextInput
+        style={styles.input}
+        value={this.state.receiptAmount}
+        onChangeText={text => {
+          this.setState({ receiptAmount: text });
+          this._calcAmountPerHead({receiptAmount: text});
+        }}
+        ref={ref => {this._inputReceiptAmount = ref}}
+        placeholder="Enter Receipt Amount"
+        autoCapitalize="none"
+        autoCorrect={false}
+        keyboardType="number-pad"
+        returnKeyType="done"
+        onSubmitEditing={this._submit}
+        blurOnSubmit={true}
+      />
 
-    <View style={styles.section}>
       <Text style={styles.inputLabel}>
-        Reason *
+        Receipt No
       </Text>
-      <TouchableOpacity style={styles.inputButton} onPress={() => { this.setState({reasonPickerHide: false});  }}>
-        <Text>{this.state.reason ? this.state.reason : "-- Choose Reason --"}</Text>
-      </TouchableOpacity>
-      {reasonPicker}
-    </View>
+      <TextInput
+        style={styles.input}
+        value={this.state.receiptNo}
+        onChangeText={text => this.setState({ receiptNo: text})}
+        ref={ref => {this._inputReceiptNo = ref}}
+        placeholder="Enter Receipt No"
+        autoCapitalize="none"
+        autoCorrect={false}
+        keyboardType="default"
+        returnKeyType="done"
+        onSubmitEditing={this._next}
+        blurOnSubmit={false}
+      />
 
-    <Text style={styles.inputLabel}>
-      Receipt No
-    </Text>
-    <TextInput
-      style={styles.input}
-      value={this.state.receiptNo}
-      onChangeText={text => this.setState({ receiptNo: text})}
-      ref={ref => {this._inputReceiptNo = ref}}
-      placeholder="Enter Receipt No"
-      autoCapitalize="none"
-      autoCorrect={false}
-      keyboardType="default"
-      returnKeyType="done"
-      onSubmitEditing={this._next}
-      blurOnSubmit={false}
-    />
-    <View style={styles.section}>
       <Text style={styles.inputLabel}>
-        Receipt Date *
+        Cont Center *
       </Text>
-{/*      <TouchableOpacity style={styles.inputButton} onPress={() => { this.setState({receiptDateHide: false});  }}>
-        <Text>{this.state.receiptDate ? this.state.receiptDate.toString() : "-- Pick Date --"}</Text>
-      </TouchableOpacity>
-*/}
-      {dateinputcontent}
-    </View>
+      <TextInput
+        style={styles.input}
+        value={this.state.costCenter}
+        onChangeText={text => this.setState({ costCenter: text})}
+        ref={ref => {this._InputCostCenter = ref}}
+        placeholder="Enter Cost Center"
+        autoFocus={false}
+        autoCapitalize="words"
+        autoCorrect={false}
+        keyboardType="default"
+        returnKeyType="done"
+        onSubmitEditing={this._next}
+        blurOnSubmit={false}
+      />
+      <Text style={styles.inputLabel}>
+        WBS Element *
+      </Text>
+      <TextInput
+        style={styles.input}
+        value={this.state.wbsElement}
+        onChangeText={text => this.setState({ wbsElement: text})}
+        ref={ref => {this._inputWbsElement = ref}}
+        placeholder="Enter Project WBS Element"
+        autoCapitalize="none"
+        autoCorrect={false}
+        keyboardType="default"
+        returnKeyType="done"
+        onSubmitEditing={this._next}
+        blurOnSubmit={false}
+      />
+      <Text style={styles.inputLabel}>
+        No of Guest
+      </Text>
+      <TextInput
+        style={styles.input}
+        value={this.state.noOfGuest}
+        onChangeText={text => {
+          this.setState({ noOfGuest: text, guestNames: text ? new Array(parseInt(text)) : null});
+          this._calcAmountPerHead({noOfGuest: text});
+        }}
+        ref={ref => {this._inputWbsElement = ref}}
+        placeholder="Enter No of Guest"
+        autoCapitalize="none"
+        autoCorrect={false}
+        keyboardType="number-pad"
+        returnKeyType="done"
+        onSubmitEditing={this._next}
+        blurOnSubmit={false}
+      />
+      {this._createGuestInputs()}
+      <Text style={styles.inputLabel}>
+        No of Staff
+      </Text>
+      <TextInput
+        style={styles.input}
+        value={this.state.noOfStaff}
+        onChangeText={text => {
+          this.setState({ noOfStaff: text });
+          this._calcAmountPerHead({noOfStaff: text});
+        }}
+        ref={ref => {this._inputWbsElement = ref}}
+        placeholder="Enter No of Staff"
+        autoCapitalize="none"
+        autoCorrect={false}
+        keyboardType="number-pad"
+        returnKeyType="done"
+        onSubmitEditing={this._next}
+        blurOnSubmit={false}
+      />
 
-    <Text style={styles.inputLabel}>
-      Receipt Amount *
-    </Text>
-    <TextInput
-      style={styles.input}
-      value={this.state.receiptAmount}
-      onChangeText={text => this.setState({ receiptAmount: text })}
-      ref={ref => {this._inputReceiptAmount = ref}}
-      placeholder="Enter Receipt Amount"
-      autoCapitalize="none"
-      autoCorrect={false}
-      keyboardType="number-pad"
-      returnKeyType="done"
-      onSubmitEditing={this._submit}
-      blurOnSubmit={true}
-    />
+      <View style={styles.section}>
+        <Text style={styles.inputLabel}>
+          Type *
+        </Text>
+        <TouchableOpacity style={styles.inputButton} onPress={() => { this.setState({typePickerHide: false});  }}>
+          <Text>{this.state.type ? this.state.type : "-- Choose Type --"}</Text>
+        </TouchableOpacity>
+        {typePicker}
+      </View>
 
-    <Text style={styles.inputLabel}>
-      Amount
-    </Text>
-    <TextInput
-      editable={false}
-      style={styles.inputDisabled}
-      value={this.state.receiptAmount}
-      placeholder="Receipt Amount"
-    />
+      <View style={styles.section}>
+        <Text style={styles.inputLabel}>
+          Reason *
+        </Text>
+        <TouchableOpacity style={styles.inputButton} onPress={() => { this.setState({reasonPickerHide: false});  }}>
+          <Text>{this.state.reason ? this.state.reason : "-- Choose Reason --"}</Text>
+        </TouchableOpacity>
+        {reasonPicker}
+      </View>
 
-    <Text style={styles.inputLabel}>
-      Amount Per Head
-    </Text>
-    <TextInput
-      editable={false}
-      style={styles.inputDisabled}
-      value={(parseFloat(this.state.amount) / (parseFloat(this.state.noOfGuest) + parseFloat(this.state.noOfStaff))).toString()}
-      placeholder="Amount Per Head"
-    />
+      <Text style={styles.inputLabel}>
+        Amount
+      </Text>
+      <TextInput
+        editable={false}
+        style={styles.inputDisabled}
+        value={this.state.receiptAmount}
+        placeholder="Receipt Amount"
+      />
+
+      <Text style={styles.inputLabel}>
+        Amount Per Head
+      </Text>
+      <TextInput
+        editable={false}
+        style={styles.inputDisabled}
+        value={(parseFloat(this.state.amount) / (parseFloat(this.state.noOfGuest) + parseFloat(this.state.noOfStaff))).toString()}
+        placeholder="Amount Per Head"
+      />
 
     </View>
 
     );
 
   };
-
-  _renderTopBar = () =>
-    <View
-      style={styles.topBar}>
-      <TouchableOpacity style={styles.toggleButton} onPress={this.scanFromGallery}>
-        <Text>Select Image</Text>
-      </TouchableOpacity>
-      <TouchableOpacity style={styles.toggleButton} onPress={this.scanFromCamera}>
-        <Text>Take Picture</Text>
-      </TouchableOpacity>
-    </View>
-
-  scanFromGallery = () => {alert("Open Gallery");};
-  scanFromCamera = () => {this.props.navigation.navigate('Camera', { setScannedReceipt: this.setScannedReceipt });};
-
-  setScannedReceipt = (receipt) => {
-    this.setState({ receiptAmount: receipt.total, receiptDate: receipt.date });
-  }
-
-  createGuestInputs = () => {
-    let inputs = [];
-    for (let i = 0; i < this.state.noOfGuest; i++) {
-      this.state.guestNames.push('');
-      var name = `_inputGuestName${i}`;
-      inputs.push(
-        <TextInput
-          key={name}
-          style={styles.input}
-          value={this.state.guestNames[i]}
-          onChangeText={text => {
-            //this.setState({guestNames[i]: text})
-            const items = this.state.guestNames;
-            items[i] = text;
-            // re-render
-            this.forceUpdate();
-          }}
-          ref={ref => {this[name] = ref}}
-          placeholder={`Enter Guest ${i+1} Name / Designation / Company`}
-          autoCapitalize="none"
-          autoCorrect={false}
-          keyboardType="default"
-          returnKeyType="done"
-          onSubmitEditing={this._next}
-          blurOnSubmit={false}
-        />
-      );
-    }
-    return inputs;
-  }
 
 }
 

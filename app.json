@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "recognition",
-    "description": "A very interesting project.",
-    "slug": "recognition",
+    "name": "Receipt Recognition",
+    "description": "POC for ABBYY Receipt Recognition",
+    "slug": "receipt-recognition",
     "privacy": "public",
     "sdkVersion": "30.0.0",
     "platforms": [
