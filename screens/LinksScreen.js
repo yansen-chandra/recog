@@ -14,7 +14,7 @@ import {
 import { Constants, ImagePicker, Permissions } from 'expo';
 import uuid from 'uuid';
 import Base64 from 'react-native-base64';
-
+console.disableYellowBox = true;
 export default class App extends React.Component {
   static navigationOptions = {
     title: 'Submit Receipt',
@@ -61,9 +61,9 @@ export default class App extends React.Component {
           onPress={this._takePhoto}
           title="Take a photo" />
 
-        <Button
+{/*        <Button
           onPress={this._recognizeImageDummy}
-          title="Sample Receipt" />
+          title="Sample Receipt" /> */}
 
         {this._maybeRenderImage()}
         {this._maybeRenderUploadingOverlay()}
@@ -96,10 +96,15 @@ export default class App extends React.Component {
 
   _maybeRenderImage = () => {
     let { image } = this.state;
-    if (!image) {
+    if (!image ) {
       return;
     }
-
+    let buttoncontent = this.state.uploading || !image ? <Text /> :
+      <Button
+        onPress={this._recognizeImage}
+        title="Re-process Receipt"
+      />
+    ;
     return (
       <View
         style={{
@@ -121,18 +126,14 @@ export default class App extends React.Component {
           <Image source={{ uri: image }} style={{ width: 250, height: 250 }} />
         </View>
 
-        <Text
+{/*        <Text
           onPress={this._copyToClipboard}
           onLongPress={this._share}
           style={{ paddingVertical: 10, paddingHorizontal: 10 }}>
           {image}
         </Text>
-
-        <Button
-          onPress={this._recognizeImage}
-          title="Recognize Receipt"
-        />
-
+*/}
+        {buttoncontent}
       </View>
     );
   };
@@ -163,7 +164,7 @@ export default class App extends React.Component {
 
   _pickImage = async () => {
     let pickerResult = await ImagePicker.launchImageLibraryAsync({
-      //allowsEditing: true,
+      allowsEditing: true,
       //aspect: [4, 3],
     });
 
@@ -178,13 +179,12 @@ export default class App extends React.Component {
       if (!pickerResult.cancelled) {
         //uploadUrl = await uploadImageAsync(pickerResult.uri);
         this.setState({ image: pickerResult.uri });
-        await this._recognizeImage();
+        this._recognizeImage();
       }
     } catch (e) {
       console.log(e);
       alert('Upload failed, sorry :(');
     } finally {
-      this.setState({ uploading: false });
     }
   };
 
@@ -194,6 +194,7 @@ export default class App extends React.Component {
 
   _recognizeImageDummy = async () => {
 
+    this.setState({ uploading: true });
     this._fetchTaskStatus('5d5f41ad-c2fd-493c-8555-1c109c80a18c')
       .then(resultUrl => this._fetchTaskResult(resultUrl))
       .then(receipt => {
@@ -240,6 +241,7 @@ export default class App extends React.Component {
        .then(resultUrl => this._fetchTaskResult(resultUrl)) //result url
        .then(receipt => {
          //this.props.navigation.getParam("setScannedReceipt", (receipt) => { return; })(receipt);
+         this.setState({ uploading: false, processMessage: "Completed" });
          this.props.navigation.navigate('Form', {receipt: receipt});
        })
        .catch(err => {
@@ -268,16 +270,21 @@ export default class App extends React.Component {
          console.log("xml task status:", result);
          const status = result.response.task[0].$.status;
          complete = status == "Completed";
+         failed = status == "Deleted" || status == "ProcessingFailed";
          if(complete)
          {
            var resultUrl = result.response.task[0].$.resultUrl;
            resolve(resultUrl);
          }
+         else if(failed)
+         {
+           reject(new Error(`Task : ${taskId} is ${status}`));
+         }
          else {
           setTimeout(getResult, interval, resolve, reject);
          }
        })
-       .catch(err => { reject(err); });
+       .catch(err => { reject(err); })
     };
     return new Promise(getResult);
   }
@@ -290,8 +297,7 @@ export default class App extends React.Component {
       .then(xml => xml2JsParser(xml))
       .then(result => {
         console.log("xml receipt result:", result.receipts.receipt[0].total);
-        console.log("xml receipt result:", result.receipts.receipt[0].date[0].normalizedValue);
-        console.log("xml receipt result:", result.receipts.receipt[0].total[0].normalizedValue);
+        console.log("xml receipt result:", result.receipts.receipt[0].date);
         this.setState({ uploading: false, processMessage: "Completed." });
         let rec = result.receipts.receipt[0];
         const total = rec.total ? rec.total[0].normalizedValue[0] : 0;
@@ -412,7 +418,7 @@ const styles = StyleSheet.create({
     color: '#2e78b7',
   },
   overlayLabel: {
-    backgroundColor: '#ffffff',
+    backgroundColor: 'rgba(255,255,255,0.3)',
     padding: 10,
     marginBottom: 20,
   },

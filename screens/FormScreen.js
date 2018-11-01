@@ -273,7 +273,8 @@ export default class FormScreen extends Component {
         blurOnSubmit={false}
       />
 
-      <Text style={styles.inputLabel}>
+{/*
+        <Text style={styles.inputLabel}>
         Cont Center *
       </Text>
       <TextInput
@@ -346,6 +347,7 @@ export default class FormScreen extends Component {
         blurOnSubmit={false}
       />
 
+*/}
       <View style={styles.section}>
         <Text style={styles.inputLabel}>
           Type *
@@ -366,7 +368,7 @@ export default class FormScreen extends Component {
         {reasonPicker}
       </View>
 
-      <Text style={styles.inputLabel}>
+{/*      <Text style={styles.inputLabel}>
         Amount
       </Text>
       <TextInput
@@ -385,7 +387,7 @@ export default class FormScreen extends Component {
         value={(parseFloat(this.state.amount) / (parseFloat(this.state.noOfGuest) + parseFloat(this.state.noOfStaff))).toString()}
         placeholder="Amount Per Head"
       />
-
+*/}
     </View>
 
     );
