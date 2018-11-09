@@ -33,6 +33,7 @@ export default class FormScreen extends Component {
     guestNames: [],
     noOfStaff: "0",
     receiptUri: '',
+    receiptBase64: null,
     typePickerHide: true,
     reasonPickerHide: true,
     receiptDateHide: true,
@@ -66,6 +67,7 @@ export default class FormScreen extends Component {
         receiptAmount: receipt.total,
         receiptDate: receipt.date ? receipt.date : new Date(),
         receiptUri: receipt.uri,
+        receiptBase64: receipt.base64,
         type: this._getReceiptType(receipt)
       });
       this._calcAmountPerHead({receiptAmount: receipt.total});
@@ -169,11 +171,17 @@ export default class FormScreen extends Component {
     try {
       const url = 'https://fj-demo-app.azurewebsites.net/api/user/postclaim'
 
-      var blob = null;
+      var receiptImage = null;
       if(this.state.receiptUri)
       {
         const response = await fetch(this.state.receiptUri);
-        blob = await response.blob();
+        let receiptImage = await response.blob();
+        // const reader = new FileReader();
+        // reader.readAsDataURL(receiptImage);
+        // reader.onloadend = () => {
+        //   let base64 = reader.result;
+        //   console.log(base64);
+        // };
       }
       const data = {
         Claim: {
@@ -185,7 +193,8 @@ export default class FormScreen extends Component {
           NoOfGuest: this.state.noOfGuest,
           GuestNames: this.state.guestNames,
         },
-        ReceiptImage: blob
+        ClaimImage: receiptImage,
+        ClaimImageBase64: this.state.receiptBase64,
       };
       console.log("email post data", data);
       const config = {

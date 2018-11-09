@@ -1,26 +1,19 @@
 import React from 'react';
 import {
-  ActivityIndicator,
-  Button,
-  Clipboard,
-  Image,
-  Share,
-  StatusBar,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+  ActivityIndicator,Clipboard,Image,Share,
+  StatusBar,StyleSheet,Text,TouchableOpacity,View,
 } from 'react-native';
+import { Card, Button, FormLabel, FormInput, CheckBox  } from "react-native-elements";
 import { Constants, ImagePicker, Permissions } from 'expo';
-import uuid from 'uuid';
 import Base64 from 'react-native-base64';
 import { isSignedIn } from "../app/auth";
 import Overlay from "./Overlay";
+import { Card, Button, FormLabel, FormInput } from "react-native-elements";
 
 console.disableYellowBox = true;
-export default class App extends React.Component {
+export default class CaptureScreen extends React.Component {
   static navigationOptions = {
-    title: 'Submit Receipt',
+    title: 'Scan Receipt',
   };
 
   state = {
@@ -28,16 +21,17 @@ export default class App extends React.Component {
     imageBase64: null,
     uploading: false,
     processMessage: '',
+    skipOCR: false,
   };
 
   async componentDidMount() {
     await Permissions.askAsync(Permissions.CAMERA_ROLL);
     await Permissions.askAsync(Permissions.CAMERA);
-    this.load();
+    this._load();
     this.props.navigation.addListener('willFocus', this.load);
   }
 
-  load = () => {
+  _load = () => {
     isSignedIn()
     .then(res => {
       if(!res)
@@ -60,15 +54,6 @@ export default class App extends React.Component {
             source={require('../assets/images/Logo-only-2R.png')}
             style={styles.welcomeImage}
           />
-          // <Text
-          //   style={{
-          //     fontSize: 20,
-          //     marginBottom: 20,
-          //     textAlign: 'center',
-          //     marginHorizontal: 15,
-          //   }}>
-          //   Submit Your Receipt
-          // </Text>
         )}
 
         <Button
@@ -80,12 +65,14 @@ export default class App extends React.Component {
           onPress={this._takePhoto}
           title="Take a photo" />
 
-{/*        <Button
-          onPress={this._recognizeImageDummy}
-          title="Sample Receipt" /> */}
-
         {this._maybeRenderImage()}
         {this._maybeRenderUploadingOverlay()}
+
+        <CheckBox
+          center
+          title='Skip OCR'
+          checked={this.state.skipOCR}
+        />
         <Text>{this.state.processMessage}</Text>
         <StatusBar barStyle="default" />
       </View>
@@ -321,19 +308,6 @@ export default class App extends React.Component {
 
 
 }
-
-// async function uploadImageAsync(uri) {
-//   // const response = await fetch(uri);
-//   // const blob = await response.blob();
-//   // const ref = firebase
-//   //   .storage()
-//   //   .ref()
-//   //   .child(uuid.v4());
-//   //
-//   // const snapshot = await ref.put(blob);
-//   // return snapshot.downloadURL;
-//   return uri;
-// }
 
 
 const xml2JsParser = (xml) => {
