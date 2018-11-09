@@ -55,7 +55,7 @@ export default class App extends React.Component {
     let { image } = this.state;
 
     return (
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+      <View style={{ paddingVertical: 20 }}>
         <Card image={require('../assets/images/header.png')}>
 
           <Button

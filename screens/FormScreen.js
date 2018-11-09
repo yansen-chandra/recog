@@ -149,7 +149,7 @@ export default class FormScreen extends Component {
     //let data = JSON.stringify(this.state, null, 4);
     Alert.alert(
       'Confirm to submit this receipt?',
-      JSON.stringify(this.state, null, 4),
+      '',
       [
         {text: 'Close', onPress: () => console.log('Cancel Pressed'), style: 'cancel'},
         {text: 'Send Email', onPress: () => this._sendResult()},
@@ -490,6 +490,7 @@ const styles = StyleSheet.create({
     //borderRadius: 4,
     borderBottomColor: '#ccc',
     borderBottomWidth: 1,
+    opacity:0.7,
   },
   input: {
     margin: 20,
