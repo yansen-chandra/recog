@@ -13,6 +13,7 @@ import ModalWrapper from 'react-native-modal-wrapper';
 import { Constants } from 'expo';
 import { email } from 'react-native-communications';
 import { isSignedIn } from "../app/auth";
+import Spinner from 'react-native-loading-spinner-overlay';
 
 export default class FormScreen extends Component {
   static navigationOptions = {
@@ -116,6 +117,11 @@ export default class FormScreen extends Component {
             onPress={this._submit}
           />
         </Card>
+        <Spinner
+          visible={this.state.processing}
+          textContent={'Processing...'}
+          textStyle={styles.spinnerTextStyle}
+        />
       </ScrollView>
     );
   }
@@ -164,8 +170,8 @@ export default class FormScreen extends Component {
 
   _sendResult = async () => {
     try {
+      this.setState({processing: true});
       const url = 'https://fj-demo-app.azurewebsites.net/api/user/postclaim'
-
       var receiptImage = null;
       if(this.state.receiptUri)
       {
@@ -203,16 +209,24 @@ export default class FormScreen extends Component {
       fetch(url, config)
        .then(response => {
          console.log("send mail response",response);
+         this.setState({ processing: false });
          return response.json();
        }) //\get response xml
-       .then(res => alert(res.Message))
+       .then(res => {
+         //alert(res.Message);
+         setTimeout(() => {
+           Alert.alert('Submit', res.Message);
+         }, 100);
+         //clear form 
+       })
        .catch(err => {
          console.log(err);
          alert(err);
-         this.setState({ uploading: false });
+         this.setState({ processing: false });
         });
     } catch (error) {
       console.error(error);
+      this.setState({processing: false});
     }
   }
 
@@ -551,7 +565,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-
+  spinnerTextStyle: {
+    color: '#eeeeee'
+  },
 });
 
 const lutypes = [

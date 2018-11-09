@@ -133,7 +133,11 @@ export default class SignInScreen extends React.Component {
     return(
       <View style={{ paddingVertical: 20 }}>
         {form}
-        {this._maybeRenderUploadingOverlay()}
+        <Spinner
+          visible={this.state.processing}
+          textContent={'Loading'}
+          textStyle={{color: '#eee'}}
+        />
       </View>
     );
 
