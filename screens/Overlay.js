@@ -19,6 +19,10 @@ export default class Overlay extends React.Component {
      this.state = {message: props.message, processing: props.processing};
    }
 
+   componentWillReceiveProps(props) {
+    this.setState({message: props.message, processing: props.processing});
+   }
+
    _maybeRenderUploadingOverlay = () => {
      if (this.state.processing) {
        return (

@@ -7,6 +7,9 @@ import {
   Picker, Label,
   Keyboard, TouchableOpacity, Alert,
 } from 'react-native';
+import { Card, Button, FormLabel, FormInput, CheckBox  } from "react-native-elements";
+import DatePicker from 'react-native-datepicker';
+import ModalWrapper from 'react-native-modal-wrapper';
 import { Constants } from 'expo';
 import { email } from 'react-native-communications';
 import { isSignedIn } from "../app/auth";
@@ -103,14 +106,16 @@ export default class FormScreen extends Component {
   render() {
     return (
       <ScrollView style={styles.container}>
-        <StatusBar barStyle="light-content" />
-        {this._renderForm()}
-        <TouchableOpacity
-             style = {styles.submitButton}
-             onPress = {this._submit}
-        >
-             <Text style = {styles.submitButtonText}> Submit </Text>
-        </TouchableOpacity>
+        <Card>
+          <StatusBar barStyle="light-content" />
+          {this._renderForm()}
+          <Button
+            buttonStyle={{ marginTop: 20 }}
+            backgroundColor="#03A9F4"
+            title="SUBMIT"
+            onPress={this._submit}
+          />
+        </Card>
       </ScrollView>
     );
   }
@@ -120,10 +125,6 @@ export default class FormScreen extends Component {
     var data = {...this.state.data};
     data[propname] = value;
     this.setState({data});
-  }
-
-  setDate(newDate) {
-    this.setState({selectedDate: newDate})
   }
 
   _calcAmountPerHead = (rec) =>
@@ -144,23 +145,17 @@ export default class FormScreen extends Component {
     Keyboard.dismiss();
   };
 
-  _go = () => {
-    Keyboard.dismiss();
-  };
-
   _submit = async () => {
-    let data = JSON.stringify(this.state, null, 4);
+    //let data = JSON.stringify(this.state, null, 4);
     Alert.alert(
       'Confirm to submit this receipt?',
-      data,
+      JSON.stringify(this.state, null, 4),
       [
         {text: 'Close', onPress: () => console.log('Cancel Pressed'), style: 'cancel'},
         {text: 'Send Email', onPress: () => this._sendResult()},
       ],
       { cancelable: false }
     )
-    //let result = await this.sendResult();
-    //alert(JSON.stringify(result));
   };
 
   _emailDialog = async (data) =>{
@@ -216,13 +211,6 @@ export default class FormScreen extends Component {
          alert(err);
          this.setState({ uploading: false });
         });
-
-{/*      let response = await fetch(
-        'https://facebook.github.io/react-native/movies.json'
-      );
-      let responseJson = await response.json();
-      return responseJson.movies;
-*/}
     } catch (error) {
       console.error(error);
     }
@@ -230,36 +218,28 @@ export default class FormScreen extends Component {
 
   _createGuestInputs = () => {
     let inputs = [];
-    if(this.state.noOfGuest && this.state.noOfGuest > 0)
+    if(this.state.noOfGuest && this.state.noOfGuest > 0) {
       this.setState((state) => {guestNames: new Array(parseInt(state.noOfGuest))});
+    }
     for (let i = 0; i < this.state.noOfGuest; i++) {
-      //this.state.guestNames.push('');
       var name = `_inputGuestName${i}`;
       inputs.push(
-        <Text key={`text${name}`} style={styles.inputLabel}>
+        <FormLabel key={`text${name}`}>
           Guest Name {(i+1).toString()}
-        </Text>
+        </FormLabel>
       );
       inputs.push(
-        <TextInput
+        <FormInput
           key={name}
           style={styles.input}
           value={this.state.guestNames[i]}
           onChangeText={text => {
-            //this.setState({guestNames[i]: text})
             const items = this.state.guestNames;
             items[i] = text;
-            // re-render
             this.forceUpdate();
           }}
           ref={ref => {this[name] = ref}}
-          placeholder={`Enter Guest ${i+1} Name / Designation / Company`}
-          autoCapitalize="none"
-          autoCorrect={false}
-          keyboardType="default"
-          returnKeyType="done"
-          onSubmitEditing={() => Keyboard.dismiss()}
-          blurOnSubmit={false}
+          placeholder={`Name/Designation/Company`}
         />
       );
     }
@@ -285,82 +265,84 @@ export default class FormScreen extends Component {
 
       let dateinput = this.state.receiptDateHide ? <Text/> : dateinputcontent;
 
-      let reasonPicker =
-       this.state.reasonPickerHide ? <Text/> :
-        <Picker
-          selectedValue={this.state.reason}
-          mode="dialog"
-          onValueChange={(itemValue, itemIndex) => {this.setState({reason: itemValue, reasonPickerHide: true}) } }>
-          <Picker.Item label="Collaborators / Industry Partner" value="CollaboratorIndustryPartner" />
-          <Picker.Item label="Host Conference Speaker" value="HostConverenceSpeaker" />
-          <Picker.Item label="Meeting / Discussion" value="MeetingDiscussion" />
-        </Picker>
+      let reasonModal =
+        this.state.reasonPickerHide ? <Text/> :
+        <ModalWrapper
+            containerStyle={{ flexDirection: 'row', alignItems: 'flex-end' }}
+            style={{ flex: 1 }}
+            visible={!this.state.reasonPickerHide}>
+            <Picker
+              selectedValue={this.state.reason}
+              mode="dialog"
+              onValueChange={(itemValue, itemIndex) => {this.setState({reason: itemValue, reasonPickerHide: true}) } }>
+              <Picker.Item label="Collaborators / Industry Partner" value="CollaboratorIndustryPartner" />
+              <Picker.Item label="Host Conference Speaker" value="HostConverenceSpeaker" />
+              <Picker.Item label="Meeting / Discussion" value="MeetingDiscussion" />
+            </Picker>
+        </ModalWrapper>
       ;
 
-      let typePicker =
+      let typeModal =
        this.state.typePickerHide ? <Text/> :
-       <Picker
-         selectedValue={this.state.type}
-         //style={{ height: 50, width: 100 }}
-         mode="dialog"
-         onValueChange={(itemValue, itemIndex) => {this.setState({type: itemValue, typePickerHide: true}) } }>
-         <Picker.Item label="BREAKFAST" value="BREAKFAST" />
-         <Picker.Item label="DINNER" value="DINNER" />
-         <Picker.Item label="LUNCH" value="LUNCH" />
-         <Picker.Item label="REFRESHMENT" value="REFRESHMENT" />
-         <Picker.Item label="TEA" value="TEA" />
-       </Picker>
+       <ModalWrapper
+           containerStyle={{ flexDirection: 'row', alignItems: 'flex-end' }}
+           style={{ flex: 1 }}
+           visible={!this.state.typePickerHide}>
+           <Picker
+             selectedValue={this.state.type}
+             mode="dialog"
+             onValueChange={(itemValue, itemIndex) => {this.setState({type: itemValue, typePickerHide: true}) } }>
+             <Picker.Item label="BREAKFAST" value="BREAKFAST" />
+             <Picker.Item label="DINNER" value="DINNER" />
+             <Picker.Item label="LUNCH" value="LUNCH" />
+             <Picker.Item label="REFRESHMENT" value="REFRESHMENT" />
+             <Picker.Item label="TEA" value="TEA" />
+           </Picker>
+       </ModalWrapper>
       ;
 
     return (
     <View>
+      <FormLabel>Receipt Date *</FormLabel>
+      <DatePicker
+        style={styles.inputDate}
+        date={this.state.receiptDate}
+        mode="date"
+        placeholder="select date"
+        format="DD MMM YYYY"
+        confirmBtnText="Select"
+        cancelBtnText="Close"
+        customStyles={{
+          dateInput: {
+            borderWidth: 0,
+            borderBottomColor: '#ccc',
+            borderBottomWidth: 1,
+            textAlign: 'left',
+            alignItems: 'left',
+            fontSize: 16,
+          }
+        }}
+        onDateChange={(date) => {this.setState({receiptDate: date})}}
+      />
 
-      <View style={styles.section}>
-        <Text style={styles.inputLabel}>
-          Receipt Date *
-        </Text>
-  {/*      <TouchableOpacity style={styles.inputButton} onPress={() => { this.setState({receiptDateHide: false});  }}>
-          <Text>{this.state.receiptDate ? this.state.receiptDate.toString() : "-- Pick Date --"}</Text>
-        </TouchableOpacity>
-  */}
-        {dateinputcontent}
-      </View>
-
-      <Text style={styles.inputLabel}>
-        Receipt Amount *
-      </Text>
-      <TextInput
-        style={styles.input}
+      <FormLabel>Receipt Amount *</FormLabel>
+      <FormInput
+        keyboardType="decimal-pad"
+        returnKeyType="done"
+        onSubmitEditing={this._next}
+        placeholder="Enter Receipt Amount ..."
         value={this.state.receiptAmount}
         onChangeText={text => {
           this.setState({ receiptAmount: text });
           this._calcAmountPerHead({receiptAmount: text});
         }}
-        ref={ref => {this._inputReceiptAmount = ref}}
-        placeholder="Enter Receipt Amount"
-        autoCapitalize="none"
-        autoCorrect={false}
-        keyboardType="decimal-pad"
-        returnKeyType="done"
-        onSubmitEditing={this._submit}
-        blurOnSubmit={true}
       />
 
-      <Text style={styles.inputLabel}>
-        Receipt No
-      </Text>
-      <TextInput
-        style={styles.input}
+      <FormLabel>Receipt No</FormLabel>
+      <FormInput
+        placeholder="Enter Receipt Number ..."
         value={this.state.receiptNo}
         onChangeText={text => this.setState({ receiptNo: text})}
-        ref={ref => {this._inputReceiptNo = ref}}
-        placeholder="Enter Receipt No"
-        autoCapitalize="none"
-        autoCorrect={false}
-        keyboardType="default"
-        returnKeyType="done"
-        onSubmitEditing={this._next}
-        blurOnSubmit={false}
       />
 
 {/*
@@ -419,30 +401,26 @@ export default class FormScreen extends Component {
       />
 
 */}
+
       <View style={styles.section}>
-        <Text style={styles.inputLabel}>
-          Type *
-        </Text>
+        <FormLabel>Type *</FormLabel>
         <TouchableOpacity style={styles.inputButton} onPress={() => { this.setState({typePickerHide: false});  }}>
           <Text>{this.state.type ? this.state.type : "-- Choose Type --"}</Text>
         </TouchableOpacity>
-        {typePicker}
+        {typeModal}
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.inputLabel}>
-          Reason *
-        </Text>
+        <FormLabel>Reason *</FormLabel>
         <TouchableOpacity style={styles.inputButton} onPress={() => { this.setState({reasonPickerHide: false});  }}>
           <Text>{this.state.reason ? this.state.reason : "-- Choose Reason --"}</Text>
         </TouchableOpacity>
-        {reasonPicker}
+        {reasonModal}
       </View>
 
-      <Text style={styles.inputLabel}>
-        No of Guest
-      </Text>
-      <TextInput
+
+      <FormLabel>No of Guest</FormLabel>
+      <FormInput
         style={styles.input}
         value={this.state.noOfGuest}
         onChangeText={text => {
@@ -453,11 +431,12 @@ export default class FormScreen extends Component {
         placeholder="Enter No of Guest"
         autoCapitalize="none"
         autoCorrect={false}
-        keyboardType="number-pad"
+        keyboardType="numeric"
         returnKeyType="done"
         onSubmitEditing={this._next}
         blurOnSubmit={false}
       />
+
       {this._createGuestInputs()}
 
 {/*      <Text style={styles.inputLabel}>
@@ -504,13 +483,13 @@ const styles = StyleSheet.create({
   },
 
   inputButton: {
-    margin: 20,
-    marginTop: 0,
+    marginHorizontal:20,
+    marginTop: 10,
     height: 34,
     padding: 7,
-    borderRadius: 4,
-    borderColor: '#ccc',
-    borderWidth: 1,
+    //borderRadius: 4,
+    borderBottomColor: '#ccc',
+    borderBottomWidth: 1,
   },
   input: {
     margin: 20,
@@ -521,6 +500,12 @@ const styles = StyleSheet.create({
     borderColor: '#ccc',
     borderWidth: 1,
     fontSize: 16,
+  },
+  inputDate: {
+    margin: 20,
+    marginTop: 0,
+    width:200,
+    height: 34,
   },
   inputDisabled: {
     margin: 20,

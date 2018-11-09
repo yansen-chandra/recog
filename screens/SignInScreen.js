@@ -12,6 +12,7 @@ import { MonoText } from '../components/StyledText';
 import { Card, Button, FormLabel, FormInput } from "react-native-elements";
 import { onSignIn, onSignOut, isSignedIn } from "../app/auth";
 import Overlay from "./Overlay";
+import Spinner from 'react-native-loading-spinner-overlay';
 
 export default class SignInScreen extends React.Component {
   static navigationOptions = ({ navigation }) => {
@@ -36,6 +37,13 @@ export default class SignInScreen extends React.Component {
         <Overlay message="Loading..." processing="true" />
       );
     }
+    // return(
+    //   <Spinner
+    //     visible={this.state.processing}
+    //     textContent={'Loading'}
+    //     textStyle={{color: '#eee'}}
+    //   />
+    // );
   };
 
   componentDidMount() {
@@ -49,7 +57,7 @@ export default class SignInScreen extends React.Component {
     {
       return(
         <View style={{ paddingVertical: 20 }}>
-          <Card>
+          <Card image={require('../assets/images/header.png')}>
             <FormLabel>Username</FormLabel>
             <FormInput placeholder="Username..."
               value={this.state.username}
@@ -87,7 +95,8 @@ export default class SignInScreen extends React.Component {
                       this.props.navigation.navigate('Links');
                     });
                   }
-                });
+                })
+                ;
               }}
             />
           </Card>
@@ -98,9 +107,9 @@ export default class SignInScreen extends React.Component {
     else {
       return (
         <View style={{ paddingVertical: 20 }}>
-          <Card>
+          <Card image={require('../assets/images/header.png')}>
             <Button
-              buttonStyle={{ marginTop: 20 }}
+              buttonStyle={{ marginTop: 10 }}
               backgroundColor="#03A9F4"
               title="SIGN OUT"
               onPress={() => {
@@ -111,6 +120,7 @@ export default class SignInScreen extends React.Component {
                 });
               }}
             />
+            {this._maybeRenderUploadingOverlay()}
           </Card>
         </View>
       );

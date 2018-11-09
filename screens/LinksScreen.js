@@ -1,7 +1,6 @@
 import React from 'react';
 import {
   ActivityIndicator,
-  Button,
   Clipboard,
   Image,
   Share,
@@ -11,11 +10,13 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { Card, Button } from "react-native-elements";
 import { Constants, ImagePicker, Permissions } from 'expo';
 import uuid from 'uuid';
 import Base64 from 'react-native-base64';
 import { isSignedIn } from "../app/auth";
 import Overlay from "./Overlay";
+import Spinner from 'react-native-loading-spinner-overlay';
 
 console.disableYellowBox = true;
 export default class App extends React.Component {
@@ -42,7 +43,7 @@ export default class App extends React.Component {
     .then(res => {
       if(!res)
       {
-        this.setState({processing: true, processMessage: 'Loading...'});
+        //this.setState({uploading: true, processMessage: 'Loading...'});
         alert("Please Sign In");
         this.props.navigation.navigate('SignIn');
       }
@@ -55,50 +56,34 @@ export default class App extends React.Component {
 
     return (
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-        {image ? null : (
-          <Image
-            source={require('../assets/images/Logo-only-2R.png')}
-            style={styles.welcomeImage}
-          />
-          // <Text
-          //   style={{
-          //     fontSize: 20,
-          //     marginBottom: 20,
-          //     textAlign: 'center',
-          //     marginHorizontal: 15,
-          //   }}>
-          //   Submit Your Receipt
-          // </Text>
-        )}
+        <Card image={require('../assets/images/header.png')}>
 
-        <Button
-          onPress={this._pickImage}
-          title="Pick from gallery"
+          <Button
+            buttonStyle={{ marginTop: 10 }}
+            backgroundColor="#03A9F4"
+            onPress={this._pickImage}
+            icon={{name: 'image', type: 'font-awesome'}}
+            title='Pick from gallery' />
+
+          <Button
+            buttonStyle={{ marginTop: 10 }}
+            backgroundColor="#03A9F4"
+            onPress={this._takePhoto}
+            icon={{name: 'camera', type: 'font-awesome'}}
+            title='Take a photo' />
+
+          {this._maybeRenderImage()}
+          {/*<Overlay message={this.state.processMessage} processing={this.state.uploading} />*/}
+        </Card>
+        <Spinner
+          visible={this.state.uploading}
+          textContent={this.state.processMessage}
+          textStyle={styles.spinnerTextStyle}
         />
-
-        <Button
-          onPress={this._takePhoto}
-          title="Take a photo" />
-
-{/*        <Button
-          onPress={this._recognizeImageDummy}
-          title="Sample Receipt" /> */}
-
-        {this._maybeRenderImage()}
-        {this._maybeRenderUploadingOverlay()}
-        <Text>{this.state.processMessage}</Text>
         <StatusBar barStyle="default" />
       </View>
     );
   }
-
-  _maybeRenderUploadingOverlay = () => {
-    if (this.state.uploading) {
-      return (
-        <Overlay message="Processing..." processing="true" />
-      );
-    }
-  };
 
   _maybeRenderImage = () => {
     let { image } = this.state;
@@ -109,7 +94,10 @@ export default class App extends React.Component {
       <Button
         onPress={this._recognizeImage}
         title="Re-process Receipt"
-      />
+        buttonStyle={{ marginTop: 5 }}
+        backgroundColor="#03A9F4"
+        icon={{name: 'refresh', type: 'font-awesome'}}
+        />
     ;
     return (
       <View
@@ -165,7 +153,6 @@ export default class App extends React.Component {
       base64: true,
     });
 
-    this.setState({ uploading: true });
     this._handleImagePicked(pickerResult);
   };
 
@@ -176,15 +163,13 @@ export default class App extends React.Component {
       //aspect: [4, 3],
     });
 
-    this.setState({ uploading: true });
     this._handleImagePicked(pickerResult);
   };
 
   _handleImagePicked = async pickerResult => {
     try {
-      this.setState({ uploading: true });
-
       if (!pickerResult.cancelled) {
+        //this.setState({ uploading: true });
         //uploadUrl = await uploadImageAsync(pickerResult.uri);
         this.setState({ image: pickerResult.uri, imageBase64: pickerResult.base64 });
         this._recognizeImage();
@@ -249,7 +234,7 @@ export default class App extends React.Component {
        .then(resultUrl => this._fetchTaskResult(resultUrl)) //result url
        .then(receipt => {
          //this.props.navigation.getParam("setScannedReceipt", (receipt) => { return; })(receipt);
-         this.setState({ uploading: false, processMessage: "Completed" });
+         this.setState({ uploading: false, processMessage: '' });
          receipt.uri = this.state.image;
          receipt.base64 = this.state.imageBase64;
          this.props.navigation.navigate('Form', {receipt: receipt});
@@ -433,5 +418,8 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.3)',
     padding: 10,
     marginBottom: 20,
+  },
+  spinnerTextStyle: {
+    color: '#eeeeee'
   },
 });

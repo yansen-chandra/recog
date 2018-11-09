@@ -10,6 +10,7 @@ import ScanScreen from '../screens/ScanScreen';
 import CameraScreen from '../screens/CameraScreen';
 import FormScreen from '../screens/FormScreen';
 import SignInScreen from '../screens/SignInScreen';
+import CaptureScreen from '../screens/CaptureScreen';
 
 //
 // const HomeStack = createStackNavigator({
@@ -86,6 +87,20 @@ LinksStack.navigationOptions = {
   ),
 };
 
+const CaptureStack = createStackNavigator({
+  Capture: CaptureScreen,
+});
+
+CaptureStack.navigationOptions = {
+  tabBarLabel: 'Capture',
+  tabBarIcon: ({ focused }) => (
+    <TabBarIcon
+      focused={focused}
+      name={Platform.OS === 'ios' ? `ios-barcode${focused ? '' : '-outline'}` : 'md-barcode'}
+    />
+  ),
+};
+
 
 const FormStack = createStackNavigator({
   Form: FormScreen,
@@ -123,9 +138,5 @@ SignInStack.navigationOptions = {
 export default createBottomTabNavigator({
   LinksStack,
   FormStack,
-  //CameraStack,
-  //HomeStack,
-  //SettingsStack,
-  //ScanStack,
   SignInStack,
 });

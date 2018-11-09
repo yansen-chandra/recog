@@ -8,7 +8,6 @@ import { Constants, ImagePicker, Permissions } from 'expo';
 import Base64 from 'react-native-base64';
 import { isSignedIn } from "../app/auth";
 import Overlay from "./Overlay";
-import { Card, Button, FormLabel, FormInput } from "react-native-elements";
 
 console.disableYellowBox = true;
 export default class CaptureScreen extends React.Component {
