@@ -14,6 +14,9 @@ import {
 import { Constants, ImagePicker, Permissions } from 'expo';
 import uuid from 'uuid';
 import Base64 from 'react-native-base64';
+import { isSignedIn } from "../app/auth";
+import Overlay from "./Overlay";
+
 console.disableYellowBox = true;
 export default class App extends React.Component {
   static navigationOptions = {
@@ -29,6 +32,21 @@ export default class App extends React.Component {
   async componentDidMount() {
     await Permissions.askAsync(Permissions.CAMERA_ROLL);
     await Permissions.askAsync(Permissions.CAMERA);
+    this.load();
+    this.props.navigation.addListener('willFocus', this.load);
+  }
+
+  load = () => {
+    isSignedIn()
+    .then(res => {
+      if(!res)
+      {
+        this.setState({processing: true, processMessage: 'Loading...'});
+        alert("Please Sign In");
+        this.props.navigation.navigate('SignIn');
+      }
+    })
+    .catch(err => alert(err));
   }
 
   render() {
@@ -38,7 +56,7 @@ export default class App extends React.Component {
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
         {image ? null : (
           <Image
-            source={require('../assets/images/abbyy.png')}
+            source={require('../assets/images/Logo-only-2R.png')}
             style={styles.welcomeImage}
           />
           // <Text
@@ -76,20 +94,7 @@ export default class App extends React.Component {
   _maybeRenderUploadingOverlay = () => {
     if (this.state.uploading) {
       return (
-        <View
-          style={[
-            StyleSheet.absoluteFill,
-            {
-              backgroundColor: 'rgba(0,0,0,0.4)',
-              alignItems: 'center',
-              justifyContent: 'center',
-            },
-          ]}>
-          <Text style={styles.overlayLabel} >
-            {this.state.processMessage}
-          </Text>
-          <ActivityIndicator color="#fff" animating size="large" />
-        </View>
+        <Overlay message={this.state.processMessage} processing="true" />
       );
     }
   };
@@ -242,6 +247,7 @@ export default class App extends React.Component {
        .then(receipt => {
          //this.props.navigation.getParam("setScannedReceipt", (receipt) => { return; })(receipt);
          this.setState({ uploading: false, processMessage: "Completed" });
+         receipt.uri = this.state.image;
          this.props.navigation.navigate('Form', {receipt: receipt});
        })
        .catch(err => {
@@ -302,7 +308,8 @@ export default class App extends React.Component {
         let rec = result.receipts.receipt[0];
         const total = rec.total ? rec.total[0].normalizedValue[0] : 0;
         const date =  rec.date ? rec.date[0].normalizedValue[0] : null;
-        const receipt = { total, date : date ? new Date(date) : null };
+        const time =  rec.time ? rec.time[0].normalizedValue[0] : null;
+        const receipt = { total, date : date ? new Date(date) : null, time };
         return receipt;
       });
       return receipt;

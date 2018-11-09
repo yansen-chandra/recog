@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { Constants } from 'expo';
 import { email } from 'react-native-communications';
+import { isSignedIn } from "../app/auth";
 
 export default class FormScreen extends Component {
   static navigationOptions = {
@@ -28,44 +29,79 @@ export default class FormScreen extends Component {
     reason: '',
     hostOfficeName: '',
     delegatingOfficeName: '',
-    noOfGuest: "5",
+    noOfGuest: "2",
     guestNames: [],
     noOfStaff: "0",
+    receiptUri: '',
     typePickerHide: true,
     reasonPickerHide: true,
     receiptDateHide: true,
+
   };
 
   componentDidMount(){
    console.log('form did mount');
-   this.load()
-   this.props.navigation.addListener('willFocus', this.load)
+   //this.load();
+   this.props.navigation.addListener('willFocus', this._load);
   }
-  load = () => {
+
+  _load = () => {
     console.log('form load');
+    isSignedIn()
+    .then(res => {
+      if(!res)
+      {
+        this.setState({processing: true, processMessage: 'Loading...'});
+        alert("Please Sign In");
+        this.props.navigation.navigate('SignIn');
+      }
+    })
+    .catch(err => alert(err));
+
     const receipt = this.props.navigation.getParam("receipt", null);
     console.log('form receipt', receipt);
     if(receipt)
     {
       this.setState({
         receiptAmount: receipt.total,
-        receiptDate: receipt.date ? receipt.date : new Date()
+        receiptDate: receipt.date ? receipt.date : new Date(),
+        receiptUri: receipt.uri,
+        type: this._getReceiptType(receipt)
       });
       this._calcAmountPerHead({receiptAmount: receipt.total});
     }
+  }
+
+  _getReceiptType = (receipt) =>
+  {
+    var type = "LUNCH";
+    if(receipt.time)
+    {
+        var hour = parseInt(receipt.time.split(':')[0]);
+        if(hour < 12)
+        {
+          type = "BREAKFAST";
+        }
+        else if(hour < 15)
+        {
+          type = "LUNCH";
+        }
+        else if(hour < 17)
+        {
+          type = "TEA";
+        }
+        else {
+          type = "DINNER";
+        }
+
+    }
+    return type;
   }
 
   render() {
     return (
       <ScrollView style={styles.container}>
         <StatusBar barStyle="light-content" />
-        {/*
-          <View style={styles.header}>
-          <Text style={styles.description}>
-            Receipt Input Form
-          </Text>
-        </View>
-        */}
         {this._renderForm()}
         <TouchableOpacity
              style = {styles.submitButton}
@@ -113,11 +149,11 @@ export default class FormScreen extends Component {
   _submit = async () => {
     let data = JSON.stringify(this.state, null, 4);
     Alert.alert(
-      'Receipt Flat Data',
+      'Confirm to submit this receipt?',
       data,
       [
         {text: 'Close', onPress: () => console.log('Cancel Pressed'), style: 'cancel'},
-        {text: 'Send Email', onPress: () => email(['yansen.chandra@sg.fujitsu.com'], null, null, 'Receipt Scan Result', data)},
+        {text: 'Send Email', onPress: () => this._sendResult()},
       ],
       { cancelable: false }
     )
@@ -125,14 +161,59 @@ export default class FormScreen extends Component {
     //alert(JSON.stringify(result));
   };
 
-  async sendResult() {
-    try {
+  _emailDialog = async (data) =>{
+    email(['yansen.chandra@sg.fujitsu.com'], null, null, 'Receipt Scan Result', data);
+  }
 
-      let response = await fetch(
+  _sendResult = async () => {
+    try {
+      const url = 'https://fj-demo-app.azurewebsites.net/api/user/postclaim'
+
+      var blob = null;
+      if(this.state.receiptUri)
+      {
+        const response = await fetch(this.state.receiptUri);
+        blob = await response.blob();
+      }
+      const data = {
+        Claim: {
+          RequestBy: 'cy',
+          ReceiptDate: this.state.receiptDate,
+          ReceiptAmount: this.state.receiptAmount,
+          Type: this.state.type,
+          Reason: this.state.reason,
+          NoOfGuest: this.state.noOfGuest,
+          GuestNames: this.state.guestNames,
+        },
+        ReceiptImage: blob
+      };
+      console.log("email post data", data);
+      const config = {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+      };
+      fetch(url, config)
+       .then(response => {
+         console.log("send mail response",response);
+         return response.json();
+       }) //\get response xml
+       .then(res => alert(res.Message))
+       .catch(err => {
+         console.log(err);
+         alert(err);
+         this.setState({ uploading: false });
+        });
+
+{/*      let response = await fetch(
         'https://facebook.github.io/react-native/movies.json'
       );
       let responseJson = await response.json();
       return responseJson.movies;
+*/}
     } catch (error) {
       console.error(error);
     }
@@ -250,7 +331,7 @@ export default class FormScreen extends Component {
         placeholder="Enter Receipt Amount"
         autoCapitalize="none"
         autoCorrect={false}
-        keyboardType="number-pad"
+        keyboardType="decimal-pad"
         returnKeyType="done"
         onSubmitEditing={this._submit}
         blurOnSubmit={true}
@@ -307,26 +388,7 @@ export default class FormScreen extends Component {
         onSubmitEditing={this._next}
         blurOnSubmit={false}
       />
-      <Text style={styles.inputLabel}>
-        No of Guest
-      </Text>
-      <TextInput
-        style={styles.input}
-        value={this.state.noOfGuest}
-        onChangeText={text => {
-          this.setState({ noOfGuest: text, guestNames: text ? new Array(parseInt(text)) : null});
-          this._calcAmountPerHead({noOfGuest: text});
-        }}
-        ref={ref => {this._inputWbsElement = ref}}
-        placeholder="Enter No of Guest"
-        autoCapitalize="none"
-        autoCorrect={false}
-        keyboardType="number-pad"
-        returnKeyType="done"
-        onSubmitEditing={this._next}
-        blurOnSubmit={false}
-      />
-      {this._createGuestInputs()}
+
       <Text style={styles.inputLabel}>
         No of Staff
       </Text>
@@ -367,6 +429,27 @@ export default class FormScreen extends Component {
         </TouchableOpacity>
         {reasonPicker}
       </View>
+
+      <Text style={styles.inputLabel}>
+        No of Guest
+      </Text>
+      <TextInput
+        style={styles.input}
+        value={this.state.noOfGuest}
+        onChangeText={text => {
+          this.setState({ noOfGuest: text, guestNames: text ? new Array(parseInt(text)) : null});
+          this._calcAmountPerHead({noOfGuest: text});
+        }}
+        ref={ref => {this._inputWbsElement = ref}}
+        placeholder="Enter No of Guest"
+        autoCapitalize="none"
+        autoCorrect={false}
+        keyboardType="number-pad"
+        returnKeyType="done"
+        onSubmitEditing={this._next}
+        blurOnSubmit={false}
+      />
+      {this._createGuestInputs()}
 
 {/*      <Text style={styles.inputLabel}>
         Amount
