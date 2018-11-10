@@ -308,7 +308,7 @@ export default class FormScreen extends Component {
 
   _renderReasonInput = (isIos) => {
     let reasonPicker =
-      <Picker style={ isIos ? null : styles.input}
+      <Picker style={{marginHorizontal:20}}
         selectedValue={this.state.reason}
         mode="dialog"
         onValueChange={(itemValue, itemIndex) => {this.setState({reason: itemValue, reasonPickerHide: true}) } }>
