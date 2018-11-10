@@ -217,7 +217,7 @@ export default class FormScreen extends Component {
          setTimeout(() => {
            Alert.alert('Submit', res.Message);
          }, 100);
-         //clear form 
+         //clear form
        })
        .catch(err => {
          console.log(err);
@@ -261,7 +261,8 @@ export default class FormScreen extends Component {
   }
 
   _renderForm = () => {
-      let dateinputcontent = Platform.OS === 'ios'?
+      const isIos = Platform.OS === 'ios';
+      let dateinputcontent = isIos ?
         <DatePickerIOS mode="date"
              date={this.state.receiptDate}
              onDateChange={value => this.setState({ receiptDate: value, receiptDateHide: true})}
@@ -279,39 +280,45 @@ export default class FormScreen extends Component {
 
       let dateinput = this.state.receiptDateHide ? <Text/> : dateinputcontent;
 
+      let reasonPicker =
+        <Picker
+          selectedValue={this.state.reason}
+          mode="dialog"
+          onValueChange={(itemValue, itemIndex) => {this.setState({reason: itemValue, reasonPickerHide: true}) } }>
+          <Picker.Item label="Collaborators / Industry Partner" value="CollaboratorIndustryPartner" />
+          <Picker.Item label="Host Conference Speaker" value="HostConverenceSpeaker" />
+          <Picker.Item label="Meeting / Discussion" value="MeetingDiscussion" />
+        </Picker>
+      ;
       let reasonModal =
         this.state.reasonPickerHide ? <Text/> :
         <ModalWrapper
             containerStyle={{ flexDirection: 'row', alignItems: 'flex-end' }}
             style={{ flex: 1 }}
             visible={!this.state.reasonPickerHide}>
-            <Picker
-              selectedValue={this.state.reason}
-              mode="dialog"
-              onValueChange={(itemValue, itemIndex) => {this.setState({reason: itemValue, reasonPickerHide: true}) } }>
-              <Picker.Item label="Collaborators / Industry Partner" value="CollaboratorIndustryPartner" />
-              <Picker.Item label="Host Conference Speaker" value="HostConverenceSpeaker" />
-              <Picker.Item label="Meeting / Discussion" value="MeetingDiscussion" />
-            </Picker>
+            {reasonPicker}
         </ModalWrapper>
       ;
 
+      let typePicker =
+        <Picker
+          selectedValue={this.state.type}
+          mode="dialog"
+          onValueChange={(itemValue, itemIndex) => {this.setState({type: itemValue, typePickerHide: true}) } }>
+          <Picker.Item label="BREAKFAST" value="BREAKFAST" />
+          <Picker.Item label="DINNER" value="DINNER" />
+          <Picker.Item label="LUNCH" value="LUNCH" />
+          <Picker.Item label="REFRESHMENT" value="REFRESHMENT" />
+          <Picker.Item label="TEA" value="TEA" />
+        </Picker>
+      ;
       let typeModal =
        this.state.typePickerHide ? <Text/> :
        <ModalWrapper
            containerStyle={{ flexDirection: 'row', alignItems: 'flex-end' }}
            style={{ flex: 1 }}
            visible={!this.state.typePickerHide}>
-           <Picker
-             selectedValue={this.state.type}
-             mode="dialog"
-             onValueChange={(itemValue, itemIndex) => {this.setState({type: itemValue, typePickerHide: true}) } }>
-             <Picker.Item label="BREAKFAST" value="BREAKFAST" />
-             <Picker.Item label="DINNER" value="DINNER" />
-             <Picker.Item label="LUNCH" value="LUNCH" />
-             <Picker.Item label="REFRESHMENT" value="REFRESHMENT" />
-             <Picker.Item label="TEA" value="TEA" />
-           </Picker>
+           {typePicker}
        </ModalWrapper>
       ;
 
@@ -332,7 +339,7 @@ export default class FormScreen extends Component {
             borderBottomColor: '#ccc',
             borderBottomWidth: 1,
             textAlign: 'left',
-            alignItems: 'left',
+            alignItems: 'initial',
             fontSize: 16,
           }
         }}
@@ -421,7 +428,7 @@ export default class FormScreen extends Component {
         <TouchableOpacity style={styles.inputButton} onPress={() => { this.setState({typePickerHide: false});  }}>
           <Text>{this.state.type ? this.state.type : "-- Choose Type --"}</Text>
         </TouchableOpacity>
-        {typeModal}
+        { isIos ? typeModal : typePicker }
       </View>
 
       <View style={styles.section}>
@@ -429,7 +436,7 @@ export default class FormScreen extends Component {
         <TouchableOpacity style={styles.inputButton} onPress={() => { this.setState({reasonPickerHide: false});  }}>
           <Text>{this.state.reason ? this.state.reason : "-- Choose Reason --"}</Text>
         </TouchableOpacity>
-        {reasonModal}
+        { isIos ? reasonModal : reasonPicker }
       </View>
 
 

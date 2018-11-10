@@ -9,6 +9,7 @@ import {
   Text,
   TouchableOpacity,
   View,
+  ScrollView,
 } from 'react-native';
 import { Card, Button } from "react-native-elements";
 import { Constants, ImagePicker, Permissions } from 'expo';
@@ -55,33 +56,35 @@ export default class App extends React.Component {
     let { image } = this.state;
 
     return (
-      <View style={{ paddingVertical: 20 }}>
-        <Card image={require('../assets/images/header.png')}>
+      <ScrollView>
+        <View style={{ paddingVertical: 10, alignItems: 'stretch', justifyContent: 'center' }}>
+          <Card image={require('../assets/images/header.png')}>
 
-          <Button
-            buttonStyle={{ marginTop: 10 }}
-            backgroundColor="#03A9F4"
-            onPress={this._pickImage}
-            icon={{name: 'image', type: 'font-awesome'}}
-            title='Pick from gallery' />
+            <Button
+              buttonStyle={{ marginTop: 10 }}
+              backgroundColor="#03A9F4"
+              onPress={this._pickImage}
+              icon={{name: 'image', type: 'font-awesome'}}
+              title='Pick from gallery' />
 
-          <Button
-            buttonStyle={{ marginTop: 10 }}
-            backgroundColor="#03A9F4"
-            onPress={this._takePhoto}
-            icon={{name: 'camera', type: 'font-awesome'}}
-            title='Take a photo' />
+            <Button
+              buttonStyle={{ marginTop: 10 }}
+              backgroundColor="#03A9F4"
+              onPress={this._takePhoto}
+              icon={{name: 'camera', type: 'font-awesome'}}
+              title='Take a photo' />
 
-          {this._maybeRenderImage()}
-          {/*<Overlay message={this.state.processMessage} processing={this.state.uploading} />*/}
-        </Card>
-        <Spinner
-          visible={this.state.uploading}
-          textContent={this.state.processMessage}
-          textStyle={styles.spinnerTextStyle}
-        />
-        <StatusBar barStyle="default" />
-      </View>
+            {this._maybeRenderImage()}
+            {/*<Overlay message={this.state.processMessage} processing={this.state.uploading} />*/}
+          </Card>
+          <Spinner
+            visible={this.state.uploading}
+            textContent={this.state.processMessage}
+            textStyle={styles.spinnerTextStyle}
+          />
+          <StatusBar barStyle="default" />
+        </View>
+      </ScrollView>
     );
   }
 
@@ -102,10 +105,10 @@ export default class App extends React.Component {
     return (
       <View
         style={{
-          marginTop: 30,
-          width: 250,
+          marginTop: 10,
           borderRadius: 3,
           elevation: 2,
+          alignItems: 'center',
         }}>
         <View
           style={{
@@ -172,6 +175,7 @@ export default class App extends React.Component {
         //this.setState({ uploading: true });
         //uploadUrl = await uploadImageAsync(pickerResult.uri);
         this.setState({ image: pickerResult.uri, imageBase64: pickerResult.base64 });
+        return;
         this._recognizeImage();
       }
     } catch (e) {

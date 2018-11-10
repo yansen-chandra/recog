@@ -131,7 +131,7 @@ export default class SignInScreen extends React.Component {
     ;
 
     return(
-      <View style={{ paddingVertical: 20 }}>
+      <View style={{ paddingVertical: 10 }}>
         {form}
         <Spinner
           visible={this.state.processing}
