@@ -19,7 +19,7 @@ export default class SignInScreen extends React.Component {
     const {state} = navigation;
     console.log(state);
     return {
-      title: 'Login',
+      title: 'Account',
       tabBarLabel: state.params && state.params.signedIn ? 'My Account' : 'Sign In',
     };
   };

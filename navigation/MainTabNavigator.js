@@ -82,7 +82,7 @@ LinksStack.navigationOptions = {
   tabBarIcon: ({ focused }) => (
     <TabBarIcon
       focused={focused}
-      name={Platform.OS === 'ios' ? `ios-barcode${focused ? '' : '-outline'}` : 'md-barcode'}
+      name={Platform.OS === 'ios' ? `ios-qr-scanner${focused ? '' : '-outline'}` : 'md-qr-scanner'}
     />
   ),
 };
@@ -92,11 +92,11 @@ const CaptureStack = createStackNavigator({
 });
 
 CaptureStack.navigationOptions = {
-  tabBarLabel: 'Capture',
+  tabBarLabel: 'Snap',
   tabBarIcon: ({ focused }) => (
     <TabBarIcon
       focused={focused}
-      name={Platform.OS === 'ios' ? `ios-barcode${focused ? '' : '-outline'}` : 'md-barcode'}
+      name={Platform.OS === 'ios' ? `ios-qr-scanner${focused ? '' : '-outline'}` : 'md-qr-scanner'}
     />
   ),
 };
@@ -111,7 +111,7 @@ FormStack.navigationOptions = {
   tabBarIcon: ({ focused }) => (
     <TabBarIcon
       focused={focused}
-      name={Platform.OS === 'ios' ? `ios-checkmark${focused ? '' : '-outline'}` : 'md-checkmark'}
+      name={Platform.OS === 'ios' ? `ios-list-box${focused ? '' : '-outline'}` : 'md-list-box'}
     />
   ),
 };
@@ -127,8 +127,8 @@ SignInStack.navigationOptions = {
       focused={focused}
       name={
         Platform.OS === 'ios'
-          ? `ios-man${focused ? '' : '-outline'}`
-          : 'md-man'
+          ? `ios-key${focused ? '' : '-outline'}`
+          : 'md-key'
       }
     />
   ),

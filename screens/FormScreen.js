@@ -17,7 +17,7 @@ import Spinner from 'react-native-loading-spinner-overlay';
 
 export default class FormScreen extends Component {
   static navigationOptions = {
-    title: 'Edit Receipt Details',
+    title: 'Receipt Details',
   };
   state = {
     //data: {
@@ -230,7 +230,7 @@ export default class FormScreen extends Component {
     }
   }
 
-  _createGuestInputs = () => {
+  _renderGuestInputs = () => {
     let inputs = [];
     if(this.state.noOfGuest && this.state.noOfGuest > 0) {
       this.setState((state) => {guestNames: new Array(parseInt(state.noOfGuest))});
@@ -239,7 +239,7 @@ export default class FormScreen extends Component {
       var name = `_inputGuestName${i}`;
       inputs.push(
         <FormLabel key={`text${name}`}>
-          Guest Name {(i+1).toString()}
+          Guest #{(i+1).toString()}
         </FormLabel>
       );
       inputs.push(
@@ -260,48 +260,9 @@ export default class FormScreen extends Component {
     return inputs;
   }
 
-  _renderForm = () => {
-      const isIos = Platform.OS === 'ios';
-      let dateinputcontent = isIos ?
-        <DatePickerIOS mode="date"
-             date={this.state.receiptDate}
-             onDateChange={value => this.setState({ receiptDate: value, receiptDateHide: true})}
-         />
-      :
-          <TextInput
-            style={styles.input}
-            value={this.state.receiptDate}
-            onChangeText={text => this.setState({ receiptDate: text, receiptDateHide: true})}
-            ref={ref => {this._inputReceiptDate = ref}}
-            placeholder="dd/MMM/yyyy"
-            //onFocus={() => this.setState({receiptDateHide: false}) }
-          />
-      ;
-
-      let dateinput = this.state.receiptDateHide ? <Text/> : dateinputcontent;
-
-      let reasonPicker =
-        <Picker
-          selectedValue={this.state.reason}
-          mode="dialog"
-          onValueChange={(itemValue, itemIndex) => {this.setState({reason: itemValue, reasonPickerHide: true}) } }>
-          <Picker.Item label="Collaborators / Industry Partner" value="CollaboratorIndustryPartner" />
-          <Picker.Item label="Host Conference Speaker" value="HostConverenceSpeaker" />
-          <Picker.Item label="Meeting / Discussion" value="MeetingDiscussion" />
-        </Picker>
-      ;
-      let reasonModal =
-        this.state.reasonPickerHide ? <Text/> :
-        <ModalWrapper
-            containerStyle={{ flexDirection: 'row', alignItems: 'flex-end' }}
-            style={{ flex: 1 }}
-            visible={!this.state.reasonPickerHide}>
-            {reasonPicker}
-        </ModalWrapper>
-      ;
-
+  _renderTypeInput = (isIos) => {
       let typePicker =
-        <Picker
+        <Picker style={{marginHorizontal:20}}
           selectedValue={this.state.type}
           mode="dialog"
           onValueChange={(itemValue, itemIndex) => {this.setState({type: itemValue, typePickerHide: true}) } }>
@@ -322,165 +283,221 @@ export default class FormScreen extends Component {
        </ModalWrapper>
       ;
 
+      if(isIos)
+      {
+        return (
+          <View>
+            <FormLabel>Type *</FormLabel>
+            <TouchableOpacity style={styles.inputButton} onPress={() => { this.setState({typePickerHide: false});  }}>
+              <Text>{this.state.type ? this.state.type : "-- Choose Type --"}</Text>
+            </TouchableOpacity>
+            { typeModal }
+          </View>
+        );
+      }
+      else {
+        return (
+          <View>
+            <FormLabel>Type *</FormLabel>
+            { typePicker }
+          </View>
+        );
+
+      }
+  }
+
+  _renderReasonInput = (isIos) => {
+    let reasonPicker =
+      <Picker style={ isIos ? null : styles.input}
+        selectedValue={this.state.reason}
+        mode="dialog"
+        onValueChange={(itemValue, itemIndex) => {this.setState({reason: itemValue, reasonPickerHide: true}) } }>
+        <Picker.Item label="Collaborators / Industry Partner" value="CollaboratorIndustryPartner" />
+        <Picker.Item label="Host Conference Speaker" value="HostConverenceSpeaker" />
+        <Picker.Item label="Meeting / Discussion" value="MeetingDiscussion" />
+      </Picker>
+    ;
+    let reasonModal =
+      this.state.reasonPickerHide ? <Text/> :
+      <ModalWrapper
+          containerStyle={{ flexDirection: 'row', alignItems: 'flex-end' }}
+          style={{ flex: 1 }}
+          visible={!this.state.reasonPickerHide}>
+          {reasonPicker}
+      </ModalWrapper>
+    ;
+
+      if(isIos)
+      {
+        return (
+          <View style={styles.section}>
+            <FormLabel>Reason *</FormLabel>
+            <TouchableOpacity style={styles.inputButton} onPress={() => { this.setState({reasonPickerHide: false});  }}>
+              <Text>{this.state.reason ? this.state.reason : "-- Choose Reason --"}</Text>
+            </TouchableOpacity>
+            { reasonModal }
+          </View>
+        );
+      }
+      else {
+        return (
+          <View>
+            <FormLabel>Reason *</FormLabel>
+            { reasonModal }
+          </View>
+        );
+
+      }
+    }
+
+  _renderForm = () => {
+      const isIos = Platform.OS === 'ios';
+
     return (
-    <View>
-      <FormLabel>Receipt Date *</FormLabel>
-      <DatePicker
-        style={styles.inputDate}
-        date={this.state.receiptDate}
-        mode="date"
-        placeholder="select date"
-        format="DD MMM YYYY"
-        confirmBtnText="Select"
-        cancelBtnText="Close"
-        customStyles={{
-          dateInput: {
-            borderWidth: 0,
-            borderBottomColor: '#ccc',
-            borderBottomWidth: 1,
-            textAlign: 'left',
-            alignItems: 'initial',
-            fontSize: 16,
-          }
-        }}
-        onDateChange={(date) => {this.setState({receiptDate: date})}}
-      />
+      <View>
+        <FormLabel>Receipt Date *</FormLabel>
+        <DatePicker
+          style={styles.inputDate}
+          date={this.state.receiptDate}
+          mode="date"
+          placeholder="select date"
+          format="DD MMM YYYY"
+          confirmBtnText="Select"
+          cancelBtnText="Close"
+          customStyles={{
+            dateInput: {
+              borderWidth: 0,
+              borderBottomColor: '#ccc',
+              borderBottomWidth: 1,
+              textAlign: 'left',
+              alignItems: 'baseline',
+              fontSize: 16,
+            }
+          }}
+          onDateChange={(date) => {this.setState({receiptDate: date})}}
+        />
 
-      <FormLabel>Receipt Amount *</FormLabel>
-      <FormInput
-        keyboardType="decimal-pad"
-        returnKeyType="done"
-        onSubmitEditing={this._next}
-        placeholder="Enter Receipt Amount ..."
-        value={this.state.receiptAmount}
-        onChangeText={text => {
-          this.setState({ receiptAmount: text });
-          this._calcAmountPerHead({receiptAmount: text});
-        }}
-      />
+        <FormLabel>Receipt Amount *</FormLabel>
+        <FormInput
+          keyboardType="decimal-pad"
+          returnKeyType="done"
+          onSubmitEditing={this._next}
+          placeholder="Enter Receipt Amount ..."
+          value={this.state.receiptAmount}
+          onChangeText={text => {
+            this.setState({ receiptAmount: text });
+            this._calcAmountPerHead({receiptAmount: text});
+          }}
+        />
 
-      <FormLabel>Receipt No</FormLabel>
-      <FormInput
-        placeholder="Enter Receipt Number ..."
-        value={this.state.receiptNo}
-        onChangeText={text => this.setState({ receiptNo: text})}
-      />
+        <FormLabel>Receipt No</FormLabel>
+        <FormInput
+          placeholder="Enter Receipt Number ..."
+          value={this.state.receiptNo}
+          onChangeText={text => this.setState({ receiptNo: text})}
+        />
 
-{/*
+  {/*
+          <Text style={styles.inputLabel}>
+          Cont Center *
+        </Text>
+        <TextInput
+          style={styles.input}
+          value={this.state.costCenter}
+          onChangeText={text => this.setState({ costCenter: text})}
+          ref={ref => {this._InputCostCenter = ref}}
+          placeholder="Enter Cost Center"
+          autoFocus={false}
+          autoCapitalize="words"
+          autoCorrect={false}
+          keyboardType="default"
+          returnKeyType="done"
+          onSubmitEditing={this._next}
+          blurOnSubmit={false}
+        />
         <Text style={styles.inputLabel}>
-        Cont Center *
-      </Text>
-      <TextInput
-        style={styles.input}
-        value={this.state.costCenter}
-        onChangeText={text => this.setState({ costCenter: text})}
-        ref={ref => {this._InputCostCenter = ref}}
-        placeholder="Enter Cost Center"
-        autoFocus={false}
-        autoCapitalize="words"
-        autoCorrect={false}
-        keyboardType="default"
-        returnKeyType="done"
-        onSubmitEditing={this._next}
-        blurOnSubmit={false}
-      />
-      <Text style={styles.inputLabel}>
-        WBS Element *
-      </Text>
-      <TextInput
-        style={styles.input}
-        value={this.state.wbsElement}
-        onChangeText={text => this.setState({ wbsElement: text})}
-        ref={ref => {this._inputWbsElement = ref}}
-        placeholder="Enter Project WBS Element"
-        autoCapitalize="none"
-        autoCorrect={false}
-        keyboardType="default"
-        returnKeyType="done"
-        onSubmitEditing={this._next}
-        blurOnSubmit={false}
-      />
+          WBS Element *
+        </Text>
+        <TextInput
+          style={styles.input}
+          value={this.state.wbsElement}
+          onChangeText={text => this.setState({ wbsElement: text})}
+          ref={ref => {this._inputWbsElement = ref}}
+          placeholder="Enter Project WBS Element"
+          autoCapitalize="none"
+          autoCorrect={false}
+          keyboardType="default"
+          returnKeyType="done"
+          onSubmitEditing={this._next}
+          blurOnSubmit={false}
+        />
 
-      <Text style={styles.inputLabel}>
-        No of Staff
-      </Text>
-      <TextInput
-        style={styles.input}
-        value={this.state.noOfStaff}
-        onChangeText={text => {
-          this.setState({ noOfStaff: text });
-          this._calcAmountPerHead({noOfStaff: text});
-        }}
-        ref={ref => {this._inputWbsElement = ref}}
-        placeholder="Enter No of Staff"
-        autoCapitalize="none"
-        autoCorrect={false}
-        keyboardType="number-pad"
-        returnKeyType="done"
-        onSubmitEditing={this._next}
-        blurOnSubmit={false}
-      />
+        <Text style={styles.inputLabel}>
+          No of Staff
+        </Text>
+        <TextInput
+          style={styles.input}
+          value={this.state.noOfStaff}
+          onChangeText={text => {
+            this.setState({ noOfStaff: text });
+            this._calcAmountPerHead({noOfStaff: text});
+          }}
+          ref={ref => {this._inputWbsElement = ref}}
+          placeholder="Enter No of Staff"
+          autoCapitalize="none"
+          autoCorrect={false}
+          keyboardType="number-pad"
+          returnKeyType="done"
+          onSubmitEditing={this._next}
+          blurOnSubmit={false}
+        />
 
-*/}
+  */}
 
-      <View style={styles.section}>
-        <FormLabel>Type *</FormLabel>
-        <TouchableOpacity style={styles.inputButton} onPress={() => { this.setState({typePickerHide: false});  }}>
-          <Text>{this.state.type ? this.state.type : "-- Choose Type --"}</Text>
-        </TouchableOpacity>
-        { isIos ? typeModal : typePicker }
+        {this._renderTypeInput(isIos)}
+        {this._renderReasonInput(isIos)}
+
+        <FormLabel>No of Guest</FormLabel>
+        <FormInput
+          style={styles.input}
+          value={this.state.noOfGuest}
+          onChangeText={text => {
+            this.setState({ noOfGuest: text, guestNames: text ? new Array(parseInt(text)) : null});
+            this._calcAmountPerHead({noOfGuest: text});
+          }}
+          ref={ref => {this._inputWbsElement = ref}}
+          placeholder="Enter No of Guest"
+          autoCapitalize="none"
+          autoCorrect={false}
+          keyboardType="numeric"
+          returnKeyType="done"
+          onSubmitEditing={this._next}
+          blurOnSubmit={false}
+        />
+
+        {this._renderGuestInputs()}
+
+  {/*      <Text style={styles.inputLabel}>
+          Amount
+        </Text>
+        <TextInput
+          editable={false}
+          style={styles.inputDisabled}
+          value={this.state.receiptAmount}
+          placeholder="Receipt Amount"
+        />
+
+        <Text style={styles.inputLabel}>
+          Amount Per Head
+        </Text>
+        <TextInput
+          editable={false}
+          style={styles.inputDisabled}
+          value={(parseFloat(this.state.amount) / (parseFloat(this.state.noOfGuest) + parseFloat(this.state.noOfStaff))).toString()}
+          placeholder="Amount Per Head"
+        />
+  */}
       </View>
-
-      <View style={styles.section}>
-        <FormLabel>Reason *</FormLabel>
-        <TouchableOpacity style={styles.inputButton} onPress={() => { this.setState({reasonPickerHide: false});  }}>
-          <Text>{this.state.reason ? this.state.reason : "-- Choose Reason --"}</Text>
-        </TouchableOpacity>
-        { isIos ? reasonModal : reasonPicker }
-      </View>
-
-
-      <FormLabel>No of Guest</FormLabel>
-      <FormInput
-        style={styles.input}
-        value={this.state.noOfGuest}
-        onChangeText={text => {
-          this.setState({ noOfGuest: text, guestNames: text ? new Array(parseInt(text)) : null});
-          this._calcAmountPerHead({noOfGuest: text});
-        }}
-        ref={ref => {this._inputWbsElement = ref}}
-        placeholder="Enter No of Guest"
-        autoCapitalize="none"
-        autoCorrect={false}
-        keyboardType="numeric"
-        returnKeyType="done"
-        onSubmitEditing={this._next}
-        blurOnSubmit={false}
-      />
-
-      {this._createGuestInputs()}
-
-{/*      <Text style={styles.inputLabel}>
-        Amount
-      </Text>
-      <TextInput
-        editable={false}
-        style={styles.inputDisabled}
-        value={this.state.receiptAmount}
-        placeholder="Receipt Amount"
-      />
-
-      <Text style={styles.inputLabel}>
-        Amount Per Head
-      </Text>
-      <TextInput
-        editable={false}
-        style={styles.inputDisabled}
-        value={(parseFloat(this.state.amount) / (parseFloat(this.state.noOfGuest) + parseFloat(this.state.noOfStaff))).toString()}
-        placeholder="Amount Per Head"
-      />
-*/}
-    </View>
 
     );
 

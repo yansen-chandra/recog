@@ -22,7 +22,7 @@ import Spinner from 'react-native-loading-spinner-overlay';
 console.disableYellowBox = true;
 export default class App extends React.Component {
   static navigationOptions = {
-    title: 'Submit Receipt',
+    title: 'Snap Receipt',
   };
 
   state = {
@@ -114,10 +114,6 @@ export default class App extends React.Component {
           style={{
             borderTopRightRadius: 3,
             borderTopLeftRadius: 3,
-            shadowColor: 'rgba(0,0,0,1)',
-            shadowOpacity: 0.2,
-            shadowOffset: { width: 4, height: 4 },
-            shadowRadius: 5,
             overflow: 'hidden',
           }}>
           <Image source={{ uri: image }} style={{ width: 250, height: 250 }} />
@@ -175,7 +171,7 @@ export default class App extends React.Component {
         //this.setState({ uploading: true });
         //uploadUrl = await uploadImageAsync(pickerResult.uri);
         this.setState({ image: pickerResult.uri, imageBase64: pickerResult.base64 });
-        return;
+        //return;
         this._recognizeImage();
       }
     } catch (e) {
