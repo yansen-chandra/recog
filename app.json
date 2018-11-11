@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "Receipt Recognition",
+    "name": "Snap Send",
     "description": "POC for ABBYY Receipt Recognition",
-    "slug": "receipt-recognition",
+    "slug": "snap-send",
     "privacy": "public",
     "sdkVersion": "30.0.0",
     "platforms": [

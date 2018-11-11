@@ -56,7 +56,7 @@ export default class FormScreen extends Component {
     .then(res => {
       if(!res)
       {
-        this.setState({processing: true, processMessage: 'Loading...'});
+        //this.setState({processing: true, processMessage: 'Loading...'});
         alert("Please Sign In");
         this.props.navigation.navigate('SignIn');
       }
@@ -343,7 +343,7 @@ export default class FormScreen extends Component {
         return (
           <View>
             <FormLabel>Reason *</FormLabel>
-            { reasonModal }
+            { reasonPicker }
           </View>
         );
 
