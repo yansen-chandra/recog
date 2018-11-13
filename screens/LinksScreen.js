@@ -14,8 +14,8 @@ import {
 import { Card, Button } from "react-native-elements";
 import { Constants, ImagePicker, Permissions } from 'expo';
 import uuid from 'uuid';
-import Base64 from 'react-native-base64';
-import { isSignedIn } from "../app/auth";
+import { isSignedIn, getAuthString } from "../app/auth";
+import { ABBYYApi } from "../app/constants";
 import Overlay from "./Overlay";
 import Spinner from 'react-native-loading-spinner-overlay';
 
@@ -102,6 +102,7 @@ export default class App extends React.Component {
         icon={{name: 'refresh', type: 'font-awesome'}}
         />
     ;
+    
     return (
       <View
         style={{
@@ -208,7 +209,8 @@ export default class App extends React.Component {
     if (uri) {
         this.setState({ uploading: true, processMessage: "Uploading Receipt ..." });
 
-      const url = 'https://cloud.ocrsdk.com/processReceipt?exportFormat=xml&country=Singapore&imageSource=photo';
+      //const url = 'https://cloud.ocrsdk.com/processReceipt?exportFormat=xml&country=Singapore&imageSource=photo';
+      const url = ABBYYApi.processReceipt;
       const response = await fetch(uri);
       const blob = await response.blob();
       const config = {
@@ -257,7 +259,8 @@ export default class App extends React.Component {
           Authorization: getAuthString()//'Basic ZmFwbF9yZWNlaXB0X3NjYW46UGdjZlVXblcvcERmVWFWVWRTOWQ5NHFl'
         }
       };
-      const url = 'https://cloud.ocrsdk.com/getTaskStatus?taskId='+taskId;
+      //const url = 'https://cloud.ocrsdk.com/getTaskStatus?taskId='+taskId;
+      const url = ABBYYApi.getTaskStatus(taskId);
       fetch(url, config)
        .then(response => response.text())
        .then(xml => xml2JsParser(xml))
@@ -336,16 +339,16 @@ const xml2JsParser = (xml) => {
   });
 }
 
-const getAuthString = (appid,password) => {
-  appid = appid || 'aileronstahn1';
-  password = password || 'gbQgnNINdFG5G2UHyipTiF1n';
-  var text = `${appid}:${password}`;
-  console.log('auth', text);
-  var encoded = Base64.encode(text);
-  console.log('auth encoded', encoded);
-  return  `Basic ${encoded}`;
-}
-
+// const getAuthString = (appid,password) => {
+//   appid = appid || 'aileronstahn1';
+//   password = password || 'gbQgnNINdFG5G2UHyipTiF1n';
+//   var text = `${appid}:${password}`;
+//   console.log('auth', text);
+//   var encoded = Base64.encode(text);
+//   console.log('auth encoded', encoded);
+//   return  `Basic ${encoded}`;
+// }
+//
 const styles = StyleSheet.create({
   container: {
     flex: 1,

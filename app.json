@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Snap Send",
-    "description": "POC for ABBYY Receipt Recognition",
+    "description": "FJ Demo Receipt Capture Recognition",
     "slug": "snap-send",
     "privacy": "public",
     "sdkVersion": "30.0.0",

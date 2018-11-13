@@ -13,6 +13,7 @@ import { Card, Button, FormLabel, FormInput, FormValidationMessage } from "react
 import { onSignIn, onSignOut, isSignedIn } from "../app/auth";
 import Overlay from "./Overlay";
 import Spinner from 'react-native-loading-spinner-overlay';
+import { FJApi } from '../app/constants';
 
 export default class SignInScreen extends React.Component {
   static navigationOptions = ({ navigation }) => {
@@ -20,7 +21,7 @@ export default class SignInScreen extends React.Component {
     console.log(state);
     return {
       title: 'Account',
-      tabBarLabel: state.params && state.params.signedIn ? 'My Account' : 'Sign In',
+      //tabBarLabel: state.params && state.params.signedIn ? 'My Account' : 'Sign In',
     };
   };
 
@@ -63,7 +64,10 @@ export default class SignInScreen extends React.Component {
       return;
     }
     this.setState({processing: true});
-    fetch(`https://fj-demo-app.azurewebsites.net/api/user/get/${this.state.username}`)
+    console.log(FJApi);
+    const url = `${FJApi.getUser}/${this.state.username}`;
+    console.log(url);
+    fetch(url)
     .then((response) => response.json())
     .then(user => {
       this.setState({processing: false});
@@ -81,12 +85,17 @@ export default class SignInScreen extends React.Component {
         this._showError('User not active.');
       }
       else {
-        onSignIn().then(() => {
-          this.setState({signedIn: true, username: '', password: ''});
-          this.props.navigation.setParams({ signedIn: true })
+        onSignIn(user.Username, user.MobileNumber).then(() => {
+          const loginUser = { id: user.Username, mobile: user.Mobile };
+          this.setState({signedIn: loginUser, username: '', password: '' });
+          this.props.navigation.setParams({ signedIn: loginUser })
           this.props.navigation.navigate('Links');
         });
       }
+    })
+    .catch(err => {
+      this.setState({processing: true, error: err.Message});
+      console.log(err);
     })
     ;
   };
@@ -94,6 +103,8 @@ export default class SignInScreen extends React.Component {
   render() {
     let form = this.state.signedIn ?
       <Card image={require('../assets/images/header.png')}>
+        <FormLabel>Welcome,</FormLabel>
+        <FormLabel>{this.state.signedIn.id}</FormLabel>
         <Button
           buttonStyle={{ marginTop: 10 }}
           backgroundColor="#03A9F4"
@@ -109,13 +120,13 @@ export default class SignInScreen extends React.Component {
       </Card>
     :
       <Card image={require('../assets/images/header.png')}>
-        <FormLabel>Username</FormLabel>
-        <FormInput placeholder="Username..."
+        <FormLabel>SAP ID</FormLabel>
+        <FormInput placeholder="SAP ID ..."
           value={this.state.username}
           onChangeText={text => this.setState({ username: text})}
         />
-        <FormLabel>Password</FormLabel>
-        <FormInput secureTextEntry placeholder="Password..."
+        <FormLabel>Mobile Number</FormLabel>
+        <FormInput secureTextEntry placeholder="Mobil Number ..."
           value={this.state.password}
           onChangeText={text => this.setState({ password: text})}
         />

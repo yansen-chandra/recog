@@ -12,7 +12,8 @@ import DatePicker from 'react-native-datepicker';
 import ModalWrapper from 'react-native-modal-wrapper';
 import { Constants } from 'expo';
 import { email } from 'react-native-communications';
-import { isSignedIn } from "../app/auth";
+import { isSignedIn, getAuthString } from "../app/auth";
+import { FJApi } from "../app/constants";
 import Spinner from 'react-native-loading-spinner-overlay';
 
 export default class FormScreen extends Component {
@@ -30,7 +31,9 @@ export default class FormScreen extends Component {
     amount: "0",
     amountPerHead: "0",
     type: '',
+    typeLabel: '',
     reason: '',
+    reasonLabel: '',
     hostOfficeName: '',
     delegatingOfficeName: '',
     noOfGuest: "2",
@@ -41,6 +44,7 @@ export default class FormScreen extends Component {
     typePickerHide: true,
     reasonPickerHide: true,
     receiptDateHide: true,
+    user: null
 
   };
 
@@ -59,6 +63,10 @@ export default class FormScreen extends Component {
         //this.setState({processing: true, processMessage: 'Loading...'});
         alert("Please Sign In");
         this.props.navigation.navigate('SignIn');
+      }
+      else {
+        console.log("Form Screen User:", res);
+        this.setState({user: res});
       }
     })
     .catch(err => alert(err));
@@ -153,12 +161,14 @@ export default class FormScreen extends Component {
 
   _submit = async () => {
     //let data = JSON.stringify(this.state, null, 4);
+    if(!this._validate())
+      return;
     Alert.alert(
       'Confirm to submit this receipt?',
       '',
       [
         {text: 'Close', onPress: () => console.log('Cancel Pressed'), style: 'cancel'},
-        {text: 'Send Email', onPress: () => this._sendResult()},
+        {text: 'Submit', onPress: () => this._sendResult()},
       ],
       { cancelable: false }
     )
@@ -168,10 +178,66 @@ export default class FormScreen extends Component {
     email(['yansen.chandra@sg.fujitsu.com'], null, null, 'Receipt Scan Result', data);
   }
 
+  _clearForm = () => {
+    this.setState(
+      {
+        costCenter: '',
+        wbsElement: '',
+        receiptNo: '',
+        receiptDate: new Date(),
+        receiptAmount: "0",
+        type: '',
+        reason: '',
+        noOfGuest: "2",
+        guestNames: [],
+        noOfStaff: "0",
+        hostOfficeName: '',
+        delegatingOfficeName: '',
+        amount: "0",
+        amountPerHead: "0",
+        receiptUri: '',
+        receiptBase64: null,
+        typePickerHide: true,
+        reasonPickerHide: true,
+        receiptDateHide: true,
+      }
+    );
+  };
+
+  _validate = () => {
+    let {
+      receiptAmount,
+      type,
+      reason,
+      noOfGuest,
+      guestNames,
+    } = this.state;
+    if(receiptAmount <= 0)
+    {
+      alert('Receipt Amount cannot be 0.');
+      return false;
+    }
+    if(noOfGuest <= 0)
+    {
+      alert('Number of Guest cannot be 0.');
+      return false;
+    }
+    if(!type)
+    {
+      alert('Claim Per Diem Type is required.');
+      return false;
+    }
+    if(!reason)
+    {
+      alert('Claim Reason is reqiured.');
+      return false;
+    }
+    return true;
+  };
+
   _sendResult = async () => {
     try {
       this.setState({processing: true});
-      const url = 'https://fj-demo-app.azurewebsites.net/api/user/postclaim'
       var receiptImage = null;
       if(this.state.receiptUri)
       {
@@ -184,29 +250,35 @@ export default class FormScreen extends Component {
         //   console.log(base64);
         // };
       }
+      const user = this.state.user;
       const data = {
         Claim: {
-          RequestBy: 'cy',
+          ClaimType: 5,
+          RequestBy: user.Id,
+          RequestPhoneNo: user.Mobile,
           ReceiptDate: this.state.receiptDate,
           ReceiptAmount: this.state.receiptAmount,
+          ReceiptNo: this.state.receiptNo,
           Type: this.state.type,
           Reason: this.state.reason,
           NoOfGuest: this.state.noOfGuest,
-          GuestNames: this.state.guestNames,
+          GuestNames: this.state.guestNames.join(),
         },
         ClaimImage: receiptImage,
         ClaimImageBase64: this.state.receiptBase64,
       };
       console.log("email post data", data);
+      //const url = 'https://fj-demo-app.azurewebsites.net/api/user/postclaim'
       const config = {
         method: 'POST',
         headers: {
           'Accept': 'application/json',
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          Authorization: getAuthString('fjdemoadmin', 'Fuj1tsu123')
         },
         body: JSON.stringify(data)
       };
-      fetch(url, config)
+      fetch(FJApi.postClaim, config)
        .then(response => {
          console.log("send mail response",response);
          this.setState({ processing: false });
@@ -218,6 +290,7 @@ export default class FormScreen extends Component {
            Alert.alert('Submit', res.Message);
          }, 100);
          //clear form
+         this._clearForm();
        })
        .catch(err => {
          console.log(err);
@@ -311,10 +384,10 @@ export default class FormScreen extends Component {
       <Picker style={{marginHorizontal:20}}
         selectedValue={this.state.reason}
         mode="dialog"
-        onValueChange={(itemValue, itemIndex) => {this.setState({reason: itemValue, reasonPickerHide: true}) } }>
-        <Picker.Item label="Collaborators / Industry Partner" value="CollaboratorIndustryPartner" />
-        <Picker.Item label="Host Conference Speaker" value="HostConverenceSpeaker" />
-        <Picker.Item label="Meeting / Discussion" value="MeetingDiscussion" />
+        onValueChange={(itemValue, itemIndex) => {this.setState({reason: itemValue, reasonLabel: lureasons[itemIndex].label , reasonPickerHide: true}) } }>
+        <Picker.Item label="Collaborators / Industry Partner" value="CI" />
+        <Picker.Item label="Host Conference Speaker" value="CS" />
+        <Picker.Item label="Meeting / Discussion" value="MD" />
       </Picker>
     ;
     let reasonModal =
@@ -333,7 +406,7 @@ export default class FormScreen extends Component {
           <View style={styles.section}>
             <FormLabel>Reason *</FormLabel>
             <TouchableOpacity style={styles.inputButton} onPress={() => { this.setState({reasonPickerHide: false});  }}>
-              <Text>{this.state.reason ? this.state.reason : "-- Choose Reason --"}</Text>
+              <Text>{this.state.reason ? this.state.reasonLabel : "-- Choose Reason --"}</Text>
             </TouchableOpacity>
             { reasonModal }
           </View>
@@ -351,10 +424,15 @@ export default class FormScreen extends Component {
     }
 
   _renderForm = () => {
-      const isIos = Platform.OS === 'ios';
+    const isIos = Platform.OS === 'ios';
+    console.log("logged user:", this.state.user);
+    const userContent = this.state.user ?
+    <Text>{this.state.user.Id}</Text>
+    : <Text/>;
 
     return (
       <View>
+      {userContent}
         <FormLabel>Receipt Date *</FormLabel>
         <DatePicker
           style={styles.inputDate}
@@ -369,7 +447,6 @@ export default class FormScreen extends Component {
               borderWidth: 0,
               borderBottomColor: '#ccc',
               borderBottomWidth: 1,
-              textAlign: 'left',
               alignItems: 'baseline',
               fontSize: 16,
             }
@@ -614,12 +691,12 @@ const lutypes = [
 
 const lureasons = [
     {
-      label: 'Collaborators / Industry Partner'
+      label: 'Collaborators / Industry Partner', value: 'CI'
     },
     {
-      label: 'Host Conference Speaker'
+      label: 'Host Conference Speaker', value: 'CS'
     },
     {
-      label: 'Meeting / Discussion'
+      label: 'Meeting / Discussion', value: 'MD'
     },
   ];

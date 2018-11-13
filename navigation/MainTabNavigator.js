@@ -3,14 +3,14 @@ import { Platform } from 'react-native';
 import { createStackNavigator, createBottomTabNavigator } from 'react-navigation';
 
 import TabBarIcon from '../components/TabBarIcon';
-import HomeScreen from '../screens/HomeScreen';
 import LinksScreen from '../screens/LinksScreen';
-import SettingsScreen from '../screens/SettingsScreen';
-import ScanScreen from '../screens/ScanScreen';
-import CameraScreen from '../screens/CameraScreen';
 import FormScreen from '../screens/FormScreen';
 import SignInScreen from '../screens/SignInScreen';
-import CaptureScreen from '../screens/CaptureScreen';
+//import HomeScreen from '../screens/HomeScreen';
+//import SettingsScreen from '../screens/SettingsScreen';
+//import ScanScreen from '../screens/ScanScreen';
+//import CameraScreen from '../screens/CameraScreen';
+//import CaptureScreen from '../screens/CaptureScreen';
 
 //
 // const HomeStack = createStackNavigator({
@@ -87,20 +87,20 @@ LinksStack.navigationOptions = {
   ),
 };
 
-const CaptureStack = createStackNavigator({
-  Capture: CaptureScreen,
-});
-
-CaptureStack.navigationOptions = {
-  tabBarLabel: 'Snap',
-  tabBarIcon: ({ focused }) => (
-    <TabBarIcon
-      focused={focused}
-      name={Platform.OS === 'ios' ? `ios-qr-scanner${focused ? '' : '-outline'}` : 'md-qr-scanner'}
-    />
-  ),
-};
-
+// const CaptureStack = createStackNavigator({
+//   Capture: CaptureScreen,
+// });
+//
+// CaptureStack.navigationOptions = {
+//   tabBarLabel: 'Snap',
+//   tabBarIcon: ({ focused }) => (
+//     <TabBarIcon
+//       focused={focused}
+//       name={Platform.OS === 'ios' ? `ios-qr-scanner${focused ? '' : '-outline'}` : 'md-qr-scanner'}
+//     />
+//   ),
+// };
+//
 
 const FormStack = createStackNavigator({
   Form: FormScreen,
