@@ -104,7 +104,7 @@ export default class SignInScreen extends React.Component {
     let form = this.state.signedIn ?
       <Card image={require('../assets/images/header.png')}>
         <FormLabel>Welcome,</FormLabel>
-        <FormLabel>{this.state.signedIn.Id}</FormLabel>
+        <FormLabel>{this.state.signedIn.id}</FormLabel>
         <Button
           buttonStyle={{ marginTop: 10 }}
           backgroundColor="#03A9F4"

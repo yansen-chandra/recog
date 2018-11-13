@@ -254,8 +254,8 @@ export default class FormScreen extends Component {
       const data = {
         Claim: {
           ClaimType: 5,
-          RequestBy: user.Id,
-          RequestPhoneNo: user.Mobile,
+          RequestBy: user.id,
+          RequestPhoneNo: user.mobile,
           ReceiptDate: this.state.receiptDate,
           ReceiptAmount: this.state.receiptAmount,
           ReceiptNo: this.state.receiptNo,
