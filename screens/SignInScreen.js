@@ -144,6 +144,7 @@ export default class SignInScreen extends React.Component {
     return(
       <View style={{ paddingVertical: 10 }}>
         {form}
+        <Text style={styles.version}>Ver0.3</Text>
         <Spinner
           visible={this.state.processing}
           textContent={'Loading'}
@@ -160,5 +161,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
+  },
+  version: {
+    textAlign: "right",
+    marginHorizontal:20,
   },
 });
