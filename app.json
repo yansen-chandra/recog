@@ -24,7 +24,11 @@
       "**/*"
     ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.fapl.snapsend"
+    },
+    "android": {
+      "package": "com.fapl.snapsend"
     }
   }
 }

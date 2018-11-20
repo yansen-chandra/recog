@@ -44,8 +44,11 @@ export const isSignedIn = () => {
 // };
 
 export const getAuthString = (appid,password) => {
-  appid = appid || 'aileronstahn1';
-  password = password || 'gbQgnNINdFG5G2UHyipTiF1n';
+  //appid = appid || 'aileronstahn1';
+  //password = password || 'gbQgnNINdFG5G2UHyipTiF1n';
+  appid = appid || 'fjdemoapp';
+  password = password || '7Ks2ZIlOa303WARixoFFI+Kz';
+
   var text = `${appid}:${password}`;
   console.log('auth', text);
   var encoded = Base64.encode(text);
