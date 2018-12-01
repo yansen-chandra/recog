@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import {
-  ScrollView,
+  ScrollView, KeyboardAvoidingView,
   Text,
   StatusBar, TextInput, View, StyleSheet,
   DatePickerIOS, Platform,
@@ -113,24 +113,31 @@ export default class FormScreen extends Component {
   }
 
   render() {
+    //<KeyboardAvoidingView style={styles.container} behavior="padding" >
+    //</KeyboardAvoidingView>
+    //<ScrollView style={styles.container}>
+    //</ScrollView>
     return (
-      <ScrollView style={styles.container}>
-        <Card>
-          <StatusBar barStyle="light-content" />
-          {this._renderForm()}
-          <Button
-            buttonStyle={{ marginTop: 20 }}
-            backgroundColor="#03A9F4"
-            title="SUBMIT"
-            onPress={this._submit}
+         <KeyboardAvoidingView style={styles.container} behavior={Platform.OS == "ios" ? "padding" : null}
+          keyboardVerticalOffset={Platform.select({ios: 20, android: 500})} >
+         <ScrollView style={styles.container}>
+          <Card>
+            <StatusBar barStyle="light-content" />
+            {this._renderForm()}
+            <Button
+              buttonStyle={{ marginTop: 20 }}
+              backgroundColor="#03A9F4"
+              title="SUBMIT"
+              onPress={this._submit}
+            />
+          </Card>
+          <Spinner
+            visible={this.state.processing}
+            textContent={'Processing...'}
+            textStyle={styles.spinnerTextStyle}
           />
-        </Card>
-        <Spinner
-          visible={this.state.processing}
-          textContent={'Processing...'}
-          textStyle={styles.spinnerTextStyle}
-        />
-      </ScrollView>
+          </ScrollView>
+          </KeyboardAvoidingView>
     );
   }
 
@@ -285,9 +292,9 @@ export default class FormScreen extends Component {
          return response.json();
        }) //\get response xml
        .then(res => {
-         //alert(res.Message);
+         console.log(res.Message);
          setTimeout(() => {
-           Alert.alert('Submit', res.Message);
+           Alert.alert('Submit', "Claim submitted successfully.");
          }, 100);
          //clear form
          this._clearForm();
@@ -346,12 +353,21 @@ export default class FormScreen extends Component {
           <Picker.Item label="TEA" value="TEA" />
         </Picker>
       ;
+      let closeButton =
+      <Button
+        buttonStyle={{ marginTop: 10, marginBottom: -50, alignSelf: 'flex-end'  }}
+        title="Done"
+        onPress={()=>{ this.setState({typePickerHide:true}) }}
+      />
+      ;
+
       let typeModal =
        this.state.typePickerHide ? <Text/> :
        <ModalWrapper
            containerStyle={{ flexDirection: 'row', alignItems: 'flex-end' }}
            style={{ flex: 1 }}
            visible={!this.state.typePickerHide}>
+           {closeButton}
            {typePicker}
        </ModalWrapper>
       ;
@@ -379,9 +395,19 @@ export default class FormScreen extends Component {
       }
   }
 
+ _closeButton = (prop) => {
+   return <Button
+     buttonStyle={{ marginTop: 10, marginBottom: -50, alignSelf: 'flex-end'  }}
+     backgroundColor="#03A9F4"
+     title="Done"
+     onPress={()=>{ alert(prop); this.setState(prop); }}
+   />
+   ;
+ }
+
   _renderReasonInput = (isIos) => {
     let reasonPicker =
-      <Picker style={{marginHorizontal:20}}
+      <Picker style={{marginHorizontal:20, zIndex:8}}
         selectedValue={this.state.reason}
         mode="dialog"
         onValueChange={(itemValue, itemIndex) => {this.setState({reason: itemValue, reasonLabel: lureasons[itemIndex].label , reasonPickerHide: true}) } }>
@@ -396,6 +422,7 @@ export default class FormScreen extends Component {
           containerStyle={{ flexDirection: 'row', alignItems: 'flex-end' }}
           style={{ flex: 1 }}
           visible={!this.state.reasonPickerHide}>
+          {this._closeButton({reasonPickerHide:true})}
           {reasonPicker}
       </ModalWrapper>
     ;
