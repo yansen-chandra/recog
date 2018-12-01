@@ -15,6 +15,7 @@ import { email } from 'react-native-communications';
 import { isSignedIn, getAuthString } from "../app/auth";
 import { FJApi } from "../app/constants";
 import Spinner from 'react-native-loading-spinner-overlay';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view'
 
 export default class FormScreen extends Component {
   static navigationOptions = {
@@ -113,14 +114,21 @@ export default class FormScreen extends Component {
   }
 
   render() {
-    //<KeyboardAvoidingView style={styles.container} behavior="padding" >
+    //<KeyboardAvoidingView style={styles.container} behavior={Platform.OS == "ios" ? "padding" : null}
+    // keyboardVerticalOffset={Platform.select({ios: 20, android: 500})} >
     //</KeyboardAvoidingView>
     //<ScrollView style={styles.container}>
     //</ScrollView>
+    //        <KeyboardAwareScrollView enableOnAndroid={true} >
+    //</KeyboardAwareScrollView>
+
     return (
-         <KeyboardAvoidingView style={styles.container} behavior={Platform.OS == "ios" ? "padding" : null}
-          keyboardVerticalOffset={Platform.select({ios: 20, android: 500})} >
-         <ScrollView style={styles.container}>
+      <KeyboardAwareScrollView
+        extraScrollHeight={100}
+        enableOnAndroid={true}
+        keyboardShouldPersistTaps='handled'
+      >
+         <View style={styles.container}>
           <Card>
             <StatusBar barStyle="light-content" />
             {this._renderForm()}
@@ -136,8 +144,8 @@ export default class FormScreen extends Component {
             textContent={'Processing...'}
             textStyle={styles.spinnerTextStyle}
           />
-          </ScrollView>
-          </KeyboardAvoidingView>
+          </View>
+          </KeyboardAwareScrollView>
     );
   }
 
@@ -353,21 +361,13 @@ export default class FormScreen extends Component {
           <Picker.Item label="TEA" value="TEA" />
         </Picker>
       ;
-      let closeButton =
-      <Button
-        buttonStyle={{ marginTop: 10, marginBottom: -50, alignSelf: 'flex-end'  }}
-        title="Done"
-        onPress={()=>{ this.setState({typePickerHide:true}) }}
-      />
-      ;
-
       let typeModal =
        this.state.typePickerHide ? <Text/> :
        <ModalWrapper
            containerStyle={{ flexDirection: 'row', alignItems: 'flex-end' }}
            style={{ flex: 1 }}
            visible={!this.state.typePickerHide}>
-           {closeButton}
+           {this._closeButton(()=>{this.setState({typePickerHide:true})})}
            {typePicker}
        </ModalWrapper>
       ;
@@ -395,12 +395,11 @@ export default class FormScreen extends Component {
       }
   }
 
- _closeButton = (prop) => {
+ _closeButton = (onpress) => {
    return <Button
-     buttonStyle={{ marginTop: 10, marginBottom: -50, alignSelf: 'flex-end'  }}
-     backgroundColor="#03A9F4"
+     buttonStyle={{ marginTop: 10, marginBottom: -10, alignSelf: 'flex-end', zIndex:9  }}
      title="Done"
-     onPress={()=>{ alert(prop); this.setState(prop); }}
+     onPress={onpress}
    />
    ;
  }
@@ -422,7 +421,7 @@ export default class FormScreen extends Component {
           containerStyle={{ flexDirection: 'row', alignItems: 'flex-end' }}
           style={{ flex: 1 }}
           visible={!this.state.reasonPickerHide}>
-          {this._closeButton({reasonPickerHide:true})}
+          {this._closeButton(()=>{this.setState({reasonPickerHide:true})})}
           {reasonPicker}
       </ModalWrapper>
     ;
