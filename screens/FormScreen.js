@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import {
-  ScrollView,
+  ScrollView, KeyboardAvoidingView,
   Text,
   StatusBar, TextInput, View, StyleSheet,
   DatePickerIOS, Platform,
@@ -15,6 +15,7 @@ import { email } from 'react-native-communications';
 import { isSignedIn, getAuthString } from "../app/auth";
 import { FJApi } from "../app/constants";
 import Spinner from 'react-native-loading-spinner-overlay';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view'
 
 export default class FormScreen extends Component {
   static navigationOptions = {
@@ -113,24 +114,38 @@ export default class FormScreen extends Component {
   }
 
   render() {
+    //<KeyboardAvoidingView style={styles.container} behavior={Platform.OS == "ios" ? "padding" : null}
+    // keyboardVerticalOffset={Platform.select({ios: 20, android: 500})} >
+    //</KeyboardAvoidingView>
+    //<ScrollView style={styles.container}>
+    //</ScrollView>
+    //        <KeyboardAwareScrollView enableOnAndroid={true} >
+    //</KeyboardAwareScrollView>
+
     return (
-      <ScrollView style={styles.container}>
-        <Card>
-          <StatusBar barStyle="light-content" />
-          {this._renderForm()}
-          <Button
-            buttonStyle={{ marginTop: 20 }}
-            backgroundColor="#03A9F4"
-            title="SUBMIT"
-            onPress={this._submit}
+      <KeyboardAwareScrollView
+        extraScrollHeight={100}
+        enableOnAndroid={true}
+        keyboardShouldPersistTaps='handled'
+      >
+         <View style={styles.container}>
+          <Card>
+            <StatusBar barStyle="light-content" />
+            {this._renderForm()}
+            <Button
+              buttonStyle={{ marginTop: 20 }}
+              backgroundColor="#03A9F4"
+              title="SUBMIT"
+              onPress={this._submit}
+            />
+          </Card>
+          <Spinner
+            visible={this.state.processing}
+            textContent={'Processing...'}
+            textStyle={styles.spinnerTextStyle}
           />
-        </Card>
-        <Spinner
-          visible={this.state.processing}
-          textContent={'Processing...'}
-          textStyle={styles.spinnerTextStyle}
-        />
-      </ScrollView>
+          </View>
+          </KeyboardAwareScrollView>
     );
   }
 
@@ -285,9 +300,9 @@ export default class FormScreen extends Component {
          return response.json();
        }) //\get response xml
        .then(res => {
-         //alert(res.Message);
+         console.log(res.Message);
          setTimeout(() => {
-           Alert.alert('Submit', res.Message);
+           Alert.alert('Submit', "Claim submitted successfully.");
          }, 100);
          //clear form
          this._clearForm();
@@ -352,6 +367,7 @@ export default class FormScreen extends Component {
            containerStyle={{ flexDirection: 'row', alignItems: 'flex-end' }}
            style={{ flex: 1 }}
            visible={!this.state.typePickerHide}>
+           {this._closeButton(()=>{this.setState({typePickerHide:true})})}
            {typePicker}
        </ModalWrapper>
       ;
@@ -379,9 +395,18 @@ export default class FormScreen extends Component {
       }
   }
 
+ _closeButton = (onpress) => {
+   return <Button
+     buttonStyle={{ marginTop: 10, marginBottom: -10, alignSelf: 'flex-end', zIndex:9  }}
+     title="Done"
+     onPress={onpress}
+   />
+   ;
+ }
+
   _renderReasonInput = (isIos) => {
     let reasonPicker =
-      <Picker style={{marginHorizontal:20}}
+      <Picker style={{marginHorizontal:20, zIndex:8}}
         selectedValue={this.state.reason}
         mode="dialog"
         onValueChange={(itemValue, itemIndex) => {this.setState({reason: itemValue, reasonLabel: lureasons[itemIndex].label , reasonPickerHide: true}) } }>
@@ -396,6 +421,7 @@ export default class FormScreen extends Component {
           containerStyle={{ flexDirection: 'row', alignItems: 'flex-end' }}
           style={{ flex: 1 }}
           visible={!this.state.reasonPickerHide}>
+          {this._closeButton(()=>{this.setState({reasonPickerHide:true})})}
           {reasonPicker}
       </ModalWrapper>
     ;
