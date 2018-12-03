@@ -301,8 +301,9 @@ export default class FormScreen extends Component {
        }) //\get response xml
        .then(res => {
          setTimeout(() => {
-           console.log(res.Message);
-           Alert.alert('Submit', "Claim submitted successfully.");
+           //console.log(res.Message);
+           //Alert.alert('Submit', res.Message);
+           Alert.alert('Submit', `Claim ${res.Message.substring(0,8)} submitted successfully.`);
          }, 100);
          //clear form
          this._clearForm();
@@ -411,7 +412,7 @@ export default class FormScreen extends Component {
         mode="dialog"
         onValueChange={(itemValue, itemIndex) => {this.setState({reason: itemValue, reasonLabel: lureasons[itemIndex].label , reasonPickerHide: true}) } }>
         <Picker.Item label="Collaborators / Industry Partner" value="CI" />
-        <Picker.Item label="Host Conference Speaker" value="CS" />
+        <Picker.Item label="Conference Speaker" value="CS" />
         <Picker.Item label="Meeting / Discussion" value="MD" />
       </Picker>
     ;
@@ -720,7 +721,7 @@ const lureasons = [
       label: 'Collaborators / Industry Partner', value: 'CI'
     },
     {
-      label: 'Host Conference Speaker', value: 'CS'
+      label: 'Conference Speaker', value: 'CS'
     },
     {
       label: 'Meeting / Discussion', value: 'MD'
