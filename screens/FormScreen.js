@@ -300,8 +300,8 @@ export default class FormScreen extends Component {
          return response.json();
        }) //\get response xml
        .then(res => {
-         console.log(res.Message);
          setTimeout(() => {
+           console.log(res.Message);
            Alert.alert('Submit', "Claim submitted successfully.");
          }, 100);
          //clear form
@@ -451,7 +451,7 @@ export default class FormScreen extends Component {
 
   _renderForm = () => {
     const isIos = Platform.OS === 'ios';
-    console.log("logged user:", this.state.user);
+    //console.log("logged user:", this.state.user);
     const userContent = this.state.user ?
     <Text>{this.state.user.Id}</Text>
     : <Text/>;
