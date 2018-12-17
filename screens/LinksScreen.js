@@ -14,7 +14,9 @@ import {
 import { Card, Button } from "react-native-elements";
 import { Constants, ImagePicker, Permissions } from 'expo';
 import uuid from 'uuid';
-import { isSignedIn, getAuthString } from "../app/auth";
+import { isSignedIn } from "../app/auth";
+import {  getAuthString } from "../app/commonservices";
+
 import { ABBYYApi } from "../app/constants";
 import Overlay from "./Overlay";
 import Spinner from 'react-native-loading-spinner-overlay';
@@ -30,23 +32,26 @@ export default class App extends React.Component {
     imageBase64: null,
     uploading: false,
     processMessage: '',
+    user: null,
   };
 
   async componentDidMount() {
     await Permissions.askAsync(Permissions.CAMERA_ROLL);
     await Permissions.askAsync(Permissions.CAMERA);
-    this.load();
-    this.props.navigation.addListener('willFocus', this.load);
+    this._load();
+    this.props.navigation.addListener('willFocus', this._load);
   }
 
-  load = () => {
+  _load = () => {
     isSignedIn()
-    .then(res => {
-      if(!res)
+    .then(user => {
+      if(!user)
       {
-        //this.setState({uploading: true, processMessage: 'Loading...'});
         alert("Please Sign In");
         this.props.navigation.navigate('SignIn');
+      }
+      else{
+        this.setState({ user: user });
       }
     })
     .catch(err => alert(err));
@@ -75,12 +80,11 @@ export default class App extends React.Component {
               title='Take a photo' />
 
             {this._maybeRenderImage()}
-            {/*<Overlay message={this.state.processMessage} processing={this.state.uploading} />*/}
           </Card>
           <Spinner
             visible={this.state.uploading}
             textContent={this.state.processMessage}
-            textStyle={styles.spinnerTextStyle}
+            textStyle={{color: '#EEE'}}
           />
           <StatusBar barStyle="default" />
         </View>
@@ -102,7 +106,7 @@ export default class App extends React.Component {
         icon={{name: 'refresh', type: 'font-awesome'}}
         />
     ;
-    
+
     return (
       <View
         style={{
@@ -178,12 +182,24 @@ export default class App extends React.Component {
     } catch (e) {
       console.log(e);
       alert('Upload failed, sorry :(');
+      this.setState({ uploading: false });
     } finally {
     }
   };
 
   _goToForm = (receipt) => {
     this.props.navigation.navigate('Form', {receipt});
+  };
+
+  _authHeader = function () {
+    console.log("login user: ", this.state.user);
+    if(this.state.user && this.state.user.settings)
+    {
+      return getAuthString(this.state.user.settings.OCRAppName, this.state.user.settings.OCRPassword);
+    }
+    else {
+      return getAuthString();
+    }
   };
 
   _recognizeImageDummy = async () => {
@@ -198,8 +214,10 @@ export default class App extends React.Component {
       })
       .catch(err => {
         console.log(err);
-        alert(err);
         this.setState({ uploading: false });
+        setTimeout(() => {
+          alert(err);
+        }, 100);
       });
 
   };
@@ -209,16 +227,16 @@ export default class App extends React.Component {
     if (uri) {
         this.setState({ uploading: true, processMessage: "Uploading Receipt ..." });
 
-      //const url = 'https://cloud.ocrsdk.com/processReceipt?exportFormat=xml&country=Singapore&imageSource=photo';
       const url = ABBYYApi.processReceipt;
       const response = await fetch(uri);
       const blob = await response.blob();
+      const authHeader = this._authHeader();
       const config = {
         method: 'POST',
         headers: {
           Accept: 'application/xml',
           'Content-Type': 'application/octec-stream;',
-          Authorization: getAuthString()//'Basic ZmFwbF9yZWNlaXB0X3NjYW46UGdjZlVXblcvcERmVWFWVWRTOWQ5NHFl'
+          Authorization: authHeader,
         },
         body: blob
       };
@@ -251,15 +269,15 @@ export default class App extends React.Component {
 
   _fetchTaskStatus = (taskId, interval) => {
     interval = interval || 1000;
+    const authHeader = this._authHeader();
     var getResult = function(resolve, reject) {
       const config = {
         method: 'GET',
         headers: {
           //Accept: 'application/xml',
-          Authorization: getAuthString()//'Basic ZmFwbF9yZWNlaXB0X3NjYW46UGdjZlVXblcvcERmVWFWVWRTOWQ5NHFl'
+          Authorization: authHeader
         }
       };
-      //const url = 'https://cloud.ocrsdk.com/getTaskStatus?taskId='+taskId;
       const url = ABBYYApi.getTaskStatus(taskId);
       fetch(url, config)
        .then(response => response.text())
@@ -339,16 +357,6 @@ const xml2JsParser = (xml) => {
   });
 }
 
-// const getAuthString = (appid,password) => {
-//   appid = appid || 'aileronstahn1';
-//   password = password || 'gbQgnNINdFG5G2UHyipTiF1n';
-//   var text = `${appid}:${password}`;
-//   console.log('auth', text);
-//   var encoded = Base64.encode(text);
-//   console.log('auth encoded', encoded);
-//   return  `Basic ${encoded}`;
-// }
-//
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -423,6 +431,6 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   spinnerTextStyle: {
-    color: '#eeeeee'
+    color: '#EEE'
   },
 });

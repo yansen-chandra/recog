@@ -7,10 +7,10 @@ import {
   Text, TouchableOpacity,
   View
 } from 'react-native';
-import { WebBrowser } from 'expo';
+import { WebBrowser, Constants } from 'expo';
 import { MonoText } from '../components/StyledText';
 import { Card, Button, FormLabel, FormInput, FormValidationMessage } from "react-native-elements";
-import { onSignIn, onSignOut, isSignedIn } from "../app/auth";
+import { onSignIn, onSignOut, isSignedIn, doLogin } from "../app/auth";
 import Overlay from "./Overlay";
 import Spinner from 'react-native-loading-spinner-overlay';
 import { FJApi } from '../app/constants';
@@ -18,7 +18,7 @@ import { FJApi } from '../app/constants';
 export default class SignInScreen extends React.Component {
   static navigationOptions = ({ navigation }) => {
     const {state} = navigation;
-    console.log(state);
+    console.log('navigation:',state);
     return {
       title: 'Account',
       //tabBarLabel: state.params && state.params.signedIn ? 'My Account' : 'Sign In',
@@ -38,13 +38,6 @@ export default class SignInScreen extends React.Component {
         <Overlay message="Loading..." processing="true" />
       );
     }
-    // return(
-    //   <Spinner
-    //     visible={this.state.processing}
-    //     textContent={'Loading'}
-    //     textStyle={{color: '#eee'}}
-    //   />
-    // );
   };
 
   componentDidMount() {
@@ -54,7 +47,6 @@ export default class SignInScreen extends React.Component {
   }
   _showError = (error) => {
     this.setState({error});
-    //alert(error);
   };
 
   _onLogin = () => {
@@ -64,40 +56,20 @@ export default class SignInScreen extends React.Component {
       return;
     }
     this.setState({processing: true});
-    console.log(FJApi);
-    const url = `${FJApi.getUser}/${this.state.username}`;
-    console.log(url);
-    fetch(url)
-    .then((response) => response.json())
-    .then(user => {
-      this.setState({processing: false});
-      console.log(user);
-      if(!user)
-      {
-        this._showError('User not found.');
-      }
-      else if(user.MobileNumber != this.state.password)
-      {
-        this._showError('Password not valid.');
-      }
-      else if(user.Deleted)
-      {
-        this._showError('User not active.');
-      }
-      else {
-        onSignIn(user.Username, user.MobileNumber).then(() => {
-          const loginUser = { id: user.Username, mobile: user.Mobile };
+    
+    doLogin(this.state.username, this.state.password)
+      .then((loginUser) => {
+        this.setState({processing: false});
+        onSignIn(loginUser).then(() => {
           this.setState({signedIn: loginUser, username: '', password: '' });
           this.props.navigation.setParams({ signedIn: loginUser })
           this.props.navigation.navigate('Links');
         });
-      }
-    })
-    .catch(err => {
-      this.setState({processing: true, error: err.Message});
-      console.log(err);
-    })
-    ;
+      })
+      .catch((err) => {
+        this.setState({processing: false});
+        this._showError(err);
+      });
   };
 
   render() {
@@ -105,6 +77,7 @@ export default class SignInScreen extends React.Component {
       <Card image={require('../assets/images/header.png')}>
         <FormLabel>Welcome,</FormLabel>
         <FormLabel>{this.state.signedIn.id}</FormLabel>
+        <FormLabel>{this.state.signedIn.name}</FormLabel>
         <Button
           buttonStyle={{ marginTop: 10 }}
           backgroundColor="#03A9F4"
@@ -144,11 +117,11 @@ export default class SignInScreen extends React.Component {
     return(
       <View style={{ paddingVertical: 10 }}>
         {form}
-        <Text style={styles.version}>Ver0.5</Text>
+        <Text style={styles.version}>{Constants.manifest.version}</Text>
         <Spinner
           visible={this.state.processing}
           textContent={'Loading'}
-          textStyle={{color: '#eee'}}
+          textStyle={{color: '#EEE'}}
         />
       </View>
     );

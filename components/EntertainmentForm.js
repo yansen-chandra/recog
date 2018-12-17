@@ -1,5 +1,4 @@
 import React, { Component } from 'react';
-import _ from 'lodash';
 import {
   ScrollView, KeyboardAvoidingView,
   Text,
@@ -13,20 +12,19 @@ import DatePicker from 'react-native-datepicker';
 import ModalWrapper from 'react-native-modal-wrapper';
 import { Constants } from 'expo';
 import { email } from 'react-native-communications';
-import { isSignedIn } from "../app/auth";
-import { getAuthString } from "../app/commonservices";
-import FJServices from "../app/fjservices";
+import { isSignedIn, getAuthString } from "../app/auth";
+import { FJApi, Styles } from "../app/constants";
 import Spinner from 'react-native-loading-spinner-overlay';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view'
 
-export default class FormScreen extends Component {
+export default class EntertainmentForm extends Component {
   static navigationOptions = {
     title: 'Receipt Details',
   };
   constructor(props) {
     super(props);
     this.state = {
-      user: null,
+      user: props.user,
       receiptUri: '',
       receiptBase64: null,
       receiptDate: new Date(),
@@ -123,7 +121,7 @@ export default class FormScreen extends Component {
         enableOnAndroid={true}
         keyboardShouldPersistTaps='handled'
       >
-         <View style={styles.container}>
+         <View style={Styles.container}>
           <Card>
             <StatusBar barStyle="light-content" />
             {this._renderForm()}
@@ -137,7 +135,7 @@ export default class FormScreen extends Component {
           <Spinner
             visible={this.state.processing}
             textContent={'Processing...'}
-            textStyle={{color: '#EEE'}}
+            textStyle={Styles.spinnerTextStyle}
           />
           </View>
           </KeyboardAwareScrollView>
@@ -287,38 +285,48 @@ export default class FormScreen extends Component {
         ClaimImage: receiptImage,
         ClaimImageBase64: this.state.receiptBase64,
       };
-
-      FJServices.postClaim(data)
-      .then((result) => {
-        console.log('after submit', result);
-        this.setState({ processing: false });
-        setTimeout(() => {
-          Alert.alert('Submit Success', `Claim ${result.Message.substring(0,8)} submitted successfully. (Approval amount subjected to claim limit)`);
-        }, 100);
-        this._clearForm();
-      })
-      .catch((err) => {
-        console.log(err);
-        this.setState({ processing: false });
-        setTimeout(() => {
-          Alert.alert('Submit Failed', err);
-        }, 100);
-      });
-
+      console.log("email post data", data);
+      //const url = 'https://fj-demo-app.azurewebsites.net/api/user/postclaim'
+      const config = {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          Authorization: getAuthString('fjdemoadmin', 'Fuj1tsu123')
+        },
+        body: JSON.stringify(data)
+      };
+      fetch(FJApi.postClaim, config)
+       .then(response => {
+         console.log("send mail response",response);
+         this.setState({ processing: false });
+         return response.json();
+       }) //\get response xml
+       .then(res => {
+         setTimeout(() => {
+           //console.log(res.Message);
+           //Alert.alert('Submit', res.Message);
+           Alert.alert('Submit', `Claim ${res.Message.substring(0,8)} submitted successfully. (Approval amount subjected to claim limit.)`);
+         }, 100);
+         //clear form
+         this._clearForm();
+       })
+       .catch(err => {
+         console.log(err);
+         alert(err);
+         this.setState({ processing: false });
+        });
     } catch (error) {
       console.error(error);
       this.setState({processing: false});
-      setTimeout(() => {
-        Alert.alert('Submit Failed', error);
-      }, 100);
     }
   }
 
   _renderGuestInputs = () => {
     let inputs = [];
-    // if(this.state.noOfGuest && this.state.noOfGuest > 0) {
-    //   this.setState((state) => {guestNames: new Array(parseInt(state.noOfGuest))});
-    // }
+    if(this.state.noOfGuest && this.state.noOfGuest > 0) {
+      this.setState((state) => {guestNames: new Array(parseInt(state.noOfGuest))});
+    }
     for (let i = 0; i < this.state.noOfGuest; i++) {
       var name = `_inputGuestName${i}`;
       inputs.push(
@@ -329,7 +337,7 @@ export default class FormScreen extends Component {
       inputs.push(
         <FormInput
           key={name}
-          style={styles.input}
+          style={Styles.input}
           value={this.state.guestNames[i]}
           onChangeText={text => {
             const items = this.state.guestNames;
@@ -362,7 +370,7 @@ export default class FormScreen extends Component {
           onValueChange={(itemValue, itemIndex) => {this.setState({type: itemValue, typePickerHide: true}) } }>
           {
               luData.map((item) => {
-                  return (<Picker.Item  key={item.label} label={item.label} value={item.label} />);
+                  return (<Picker.Item label={item.label} value={item.label} />);
               })
           }
         </Picker>
@@ -383,7 +391,7 @@ export default class FormScreen extends Component {
         return (
           <View>
             <FormLabel>Type *</FormLabel>
-            <TouchableOpacity style={styles.inputButton} onPress={() => { this.setState({typePickerHide: false});  }}>
+            <TouchableOpacity style={Styles.inputButton} onPress={() => { this.setState({typePickerHide: false});  }}>
               <Text>{this.state.type ? this.state.type : "-- Choose Type --"}</Text>
             </TouchableOpacity>
             { typeModal }
@@ -410,7 +418,7 @@ export default class FormScreen extends Component {
         onValueChange={(itemValue, itemIndex) => {this.setState({reason: itemValue, reasonLabel: luData[itemIndex].label , reasonPickerHide: true}) } }>
         {
             luData.map((item) => {
-                return (<Picker.Item  key={item.value} label={item.label} value={item.value} />);
+                return (<Picker.Item label={item.label} value={item.value} />);
             })
         }
       </Picker>
@@ -429,9 +437,9 @@ export default class FormScreen extends Component {
       if(isIos)
       {
         return (
-          <View style={styles.section}>
+          <View style={Styles.section}>
             <FormLabel>Reason *</FormLabel>
-            <TouchableOpacity style={styles.inputButton} onPress={() => { this.setState({reasonPickerHide: false});  }}>
+            <TouchableOpacity style={Styles.inputButton} onPress={() => { this.setState({reasonPickerHide: false});  }}>
               <Text>{this.state.reason ? this.state.reasonLabel : "-- Choose Reason --"}</Text>
             </TouchableOpacity>
             { reasonModal }
@@ -450,25 +458,15 @@ export default class FormScreen extends Component {
     }
 
   _renderWbsInput = (isIos) => {
-      let luData = [];
-      const user = this.state.user;
-      if(user && user.options)
-      {
-        let option = _.filter(user.options, { Name: 'WBSElement' });
-        //console.log("render wbs", option[0]);
-        if(option.length > 0)
-        {
-          luData = option[0].Items;
-        }
-      }
+      let luData = luwbs;
       let picker =
         <Picker style={{marginHorizontal:20}}
           selectedValue={this.state.wbsElement}
           mode="dialog"
-          onValueChange={(itemValue, itemIndex) => {this.setState({wbsElement: itemValue, wbsElementLabel: luData[itemIndex].Label , wbsPickerHide: true}) } }>
+          onValueChange={(itemValue, itemIndex) => {this.setState({wbsElement: itemValue, wbsElementLabel: luData[itemIndex].label , wbsPickerHide: true}) } }>
           {
               luData.map((item) => {
-                  return (<Picker.Item key={item.Value} label={item.Label} value={item.Value} />);
+                  return (<Picker.Item label={item.label} value={item.label} />);
               })
           }
         </Picker>
@@ -487,9 +485,9 @@ export default class FormScreen extends Component {
       if(isIos)
       {
         return (
-          <View style={styles.section}>
+          <View style={Styles.section}>
             <FormLabel>WBS Element</FormLabel>
-            <TouchableOpacity style={styles.inputButton} onPress={() => { this.setState({wbsPickerHide: false});  }}>
+            <TouchableOpacity style={Styles.inputButton} onPress={() => { this.setState({wbsPickerHide: false});  }}>
               <Text>{this.state.wbsElement ? this.state.wbsElementLabel : "-- Choose WBS Element --"}</Text>
             </TouchableOpacity>
             { modal }
@@ -519,7 +517,7 @@ export default class FormScreen extends Component {
         {userContent}
         <FormLabel>Receipt Date *</FormLabel>
         <DatePicker
-          style={styles.inputDate}
+          style={Styles.inputDate}
           date={this.state.receiptDate}
           mode="date"
           placeholder="select date"
@@ -532,6 +530,7 @@ export default class FormScreen extends Component {
               borderBottomColor: '#ccc',
               borderBottomWidth: 1,
               alignItems: 'baseline',
+              fontSize: 16,
             }
           }}
           onDateChange={(date) => {this.setState({receiptDate: date})}}
@@ -577,7 +576,7 @@ export default class FormScreen extends Component {
 
         <FormLabel>No. of Guest</FormLabel>
         <FormInput
-          style={styles.input}
+          style={Styles.input}
           value={this.state.noOfGuest}
           onChangeText={text => {
             if(text > 10)
@@ -602,7 +601,7 @@ export default class FormScreen extends Component {
 
         <FormLabel>No. of Staff (excluding hosting officer)</FormLabel>
         <FormInput
-          style={styles.input}
+          style={Styles.input}
           value={this.state.noOfStaff}
           onChangeText={text => {
             this.setState({ noOfStaff: text });
@@ -618,26 +617,6 @@ export default class FormScreen extends Component {
           blurOnSubmit={false}
         />
 
-  {/*      <Text style={styles.inputLabel}>
-          Amount
-        </Text>
-        <TextInput
-          editable={false}
-          style={styles.inputDisabled}
-          value={this.state.receiptAmount}
-          placeholder="Receipt Amount"
-        />
-
-        <Text style={styles.inputLabel}>
-          Amount Per Head
-        </Text>
-        <TextInput
-          editable={false}
-          style={styles.inputDisabled}
-          value={(parseFloat(this.state.amount) / (parseFloat(this.state.noOfGuest) + parseFloat(this.state.noOfStaff))).toString()}
-          placeholder="Amount Per Head"
-        />
-  */}
       </View>
 
     );
@@ -645,95 +624,6 @@ export default class FormScreen extends Component {
   };
 
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#ecf0f1',
-  },
-  header: {
-    //paddingTop: 20 + Constants.statusBarHeight,
-    padding: 20,
-    backgroundColor: '#336699',
-  },
-  description: {
-    fontSize: 14,
-    color: 'white',
-  },
-
-  inputButton: {
-    marginHorizontal:20,
-    marginTop: 10,
-    height: 34,
-    padding: 7,
-    //borderRadius: 4,
-    borderBottomColor: '#ccc',
-    borderBottomWidth: 1,
-    opacity:0.7,
-  },
-  input: {
-    margin: 20,
-    marginTop: 0,
-    height: 34,
-    paddingHorizontal: 10,
-    borderRadius: 4,
-    borderColor: '#ccc',
-    borderWidth: 1,
-    fontSize: 16,
-  },
-  inputDate: {
-    margin: 20,
-    marginTop: 0,
-    width:200,
-    height: 34,
-  },
-  inputDisabled: {
-    margin: 20,
-    marginTop: 0,
-    height: 34,
-    paddingHorizontal: 10,
-    borderRadius: 4,
-    borderColor: '#ccc',
-    borderWidth: 1,
-    fontSize: 16,
-    backgroundColor: '#eeeeee',
-  },
-  inputLabel: {
-    marginLeft:20,
-    marginBottom:5,
-  },
-  section: {
-  },
-  submitButton: {
-     backgroundColor: 'rgba(5,165,209,.8)',
-     padding: 10,
-     margin: 15,
-     height: 40,
-  },
-  submitButtonText:{
-     color: 'white'
-  },
-  topBar: {
-    flex: 0.2,
-    backgroundColor: 'transparent',
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    paddingTop: Constants.statusBarHeight / 2,
-  },
-  toggleButton: {
-    flex: 0.25,
-    height: 40,
-    marginHorizontal: 2,
-    marginBottom: 10,
-    marginTop: 20,
-    padding: 5,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  spinnerTextStyle: {
-    color: '#eeeeee'
-  },
-});
 
 const lutypes = [
     {
@@ -765,5 +655,20 @@ const lureasons = [
     },
     {
       label: 'Meeting / Discussion', value: 'MD'
+    },
+  ];
+
+const luwbs = [
+    {
+      label: 'None', value: ''
+    },
+    {
+      label: 'WBS-AAA-001 / WBS ZERO ONE', value: 'WBS-AAA-001'
+    },
+    {
+      label: 'WBS-BBB-002 / WBS ZERO TWO', value: 'WBS-BBB-002'
+    },
+    {
+      label: 'WBS-CCC-003 / WBS ZERO THREE', value: 'WBS-CCC-003'
     },
   ];
