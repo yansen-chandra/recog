@@ -37,8 +37,8 @@ export default class FormScreen extends Component {
       wbsElementLabel: '',
       amount: "0",
       amountPerHead: "0",
-      type: '',
-      typeLabel: '',
+      type: 'LUNCH',
+      typeLabel: 'LUNCH',
       reason: '',
       reasonLabel: '',
       hostOfficerName: '',
@@ -69,7 +69,7 @@ export default class FormScreen extends Component {
         this.props.navigation.navigate('SignIn');
       }
       else {
-        console.log("Form Screen User:", user);
+        //console.log("Form Screen User:", user);
         this.setState({user: user, hostOfficerName: user.id});
       }
     })
@@ -196,7 +196,7 @@ export default class FormScreen extends Component {
         receiptNo: '',
         receiptDate: new Date(),
         receiptAmount: "0",
-        type: '',
+        type: 'LUNCH',
         reason: '',
         noOfGuest: "2",
         guestNames: [],
@@ -287,12 +287,13 @@ export default class FormScreen extends Component {
         ClaimImage: receiptImage,
         ClaimImageBase64: this.state.receiptBase64,
       };
-
+      console.log('claim submit data', data);
       FJServices.postClaim(data)
       .then((result) => {
         console.log('after submit', result);
         this.setState({ processing: false });
         setTimeout(() => {
+          console.log(result);
           Alert.alert('Submit Success', `Claim ${result.Message.substring(0,8)} submitted successfully. (Approval amount subjected to claim limit)`);
         }, 100);
         this._clearForm();
@@ -458,7 +459,8 @@ export default class FormScreen extends Component {
         //console.log("render wbs", option[0]);
         if(option.length > 0)
         {
-          luData = option[0].Items;
+          luData = [{Label: 'None', Value: ''}, ...option[0].Items]
+          //luData = option[0].Items;
         }
       }
       let picker =
@@ -737,19 +739,19 @@ const styles = StyleSheet.create({
 
 const lutypes = [
     {
-      label: 'Breakfast'
+      label: 'BREAKFAST'
     },
     {
-      label: 'Lunch'
+      label: 'LUNCH'
     },
     {
-      label: 'Dinner'
+      label: 'DINNER'
     },
     {
-      label: 'Refreshment'
+      label: 'REFRESHMENT'
     },
     {
-      label: 'Tea'
+      label: 'TEA'
     }
   ];
 

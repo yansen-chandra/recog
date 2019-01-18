@@ -12,7 +12,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { Card, Button } from "react-native-elements";
-import { Constants, ImagePicker, Permissions } from 'expo';
+import { Constants, ImagePicker, Permissions, ImageManipulator } from 'expo';
 import uuid from 'uuid';
 import { isSignedIn } from "../app/auth";
 import {  getAuthString } from "../app/commonservices";
@@ -175,7 +175,14 @@ export default class App extends React.Component {
       if (!pickerResult.cancelled) {
         //this.setState({ uploading: true });
         //uploadUrl = await uploadImageAsync(pickerResult.uri);
-        this.setState({ image: pickerResult.uri, imageBase64: pickerResult.base64 });
+
+        const manipResult = await ImageManipulator.manipulate(
+            pickerResult.uri,
+            [{ resize: { width: 640 } }],
+            { format: 'jpg', base64: true }
+        );
+
+        this.setState({ image: manipResult.uri, imageBase64: manipResult.base64 });
         //return;
         this._recognizeImage();
       }

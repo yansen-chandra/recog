@@ -17,7 +17,7 @@ async function get(url) {
      };
      const resp = await fetch(url, config)
       .then((response) => response.json());
-     console.log(`Get ${url} response:`, resp);
+     //console.log(`Get ${url} response:`, resp);
      return resp;
    } catch (err) {
         console.log(err)

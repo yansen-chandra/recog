@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "Snap Send",
-    "description": "FJ Demo Receipt Capture Recognition",
-    "slug": "snap-send",
+    "name": "Snap & Send App",
+    "description": "Receipt recognition and submission application live environment",
+    "slug": "snap-and-send-app",
     "privacy": "public",
     "sdkVersion": "30.0.0",
     "platforms": [

@@ -56,7 +56,7 @@ export default class SignInScreen extends React.Component {
       return;
     }
     this.setState({processing: true});
-    
+
     doLogin(this.state.username, this.state.password)
       .then((loginUser) => {
         this.setState({processing: false});
@@ -117,7 +117,7 @@ export default class SignInScreen extends React.Component {
     return(
       <View style={{ paddingVertical: 10 }}>
         {form}
-        <Text style={styles.version}>{Constants.manifest.version}</Text>
+        <Text style={styles.version}>version {Constants.manifest.version}</Text>
         <Spinner
           visible={this.state.processing}
           textContent={'Loading'}

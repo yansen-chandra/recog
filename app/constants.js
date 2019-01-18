@@ -1,14 +1,34 @@
 import { StyleSheet } from 'react-native';
 import {Constants} from 'expo';
 
-export const FJApi = {
-    host: 'https://fj-demo-app.azurewebsites.net/api',
+export const FJApiDev = {
+    host: 'https://fj-demo-app.azurewebsites.net',
     apiUser:'fjdemoadmin',
     apiPassword:'Fuj1tsu123',
     getCompany: `https://fj-demo-app.azurewebsites.net/api/Claim/GetCompany`,
     getUser: `https://fj-demo-app.azurewebsites.net/api/Claim/GetUser`,
     postClaim: `https://fj-demo-app.azurewebsites.net/api/Claim/PostClaim`,
 };
+
+export const FJApiVM = {
+    host: 'http://fapl-app.southeastasia.cloudapp.azure.com',
+    apiUser:'fjdemoadmin',
+    apiPassword:'Fuj1tsu123',
+    getCompany: `http://fapl-app.southeastasia.cloudapp.azure.com/api/Claim/GetCompany`,
+    getUser: `http://fapl-app.southeastasia.cloudapp.azure.com/api/Claim/GetUser`,
+    postClaim: `http://fapl-app.southeastasia.cloudapp.azure.com/api/Claim/PostClaim`,
+};
+
+export const FJApi = {
+    host: 'https://snap-send.azurewebsites.net',
+    apiUser:'fjdemoadmin',
+    apiPassword:'Fuj1tsu123',
+    getCompany: `https://snap-send.azurewebsites.net/api/Claim/GetCompany`,
+    getUser: `https://snap-send.azurewebsites.net/api/Claim/GetUser`,
+    postClaim: `https://snap-send.azurewebsites.net/api/Claim/PostClaim`,
+};
+
+
 
 const url = 'https://cloud.ocrsdk.com/processReceipt?exportFormat=xml&country=Singapore&imageSource=photo';
 
