@@ -25,10 +25,10 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.fapl.snapsend"
+      "bundleIdentifier": "com.fapl.snapadsend"
     },
     "android": {
-      "package": "com.fapl.snapsend"
+      "package": "com.fapl.snapadsend"
     }
   }
 }
