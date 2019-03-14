@@ -3,9 +3,10 @@ import { Platform } from 'react-native';
 import { createStackNavigator, createBottomTabNavigator } from 'react-navigation';
 
 import TabBarIcon from '../components/TabBarIcon';
+import SignInScreen from '../screens/SignInScreen';
 import LinksScreen from '../screens/LinksScreen';
 import FormScreen from '../screens/FormScreen';
-import SignInScreen from '../screens/SignInScreen';
+import ExpenseFormScreen from '../screens/ExpenseFormScreen';
 //import HomeScreen from '../screens/HomeScreen';
 //import SettingsScreen from '../screens/SettingsScreen';
 //import ScanScreen from '../screens/ScanScreen';
@@ -103,6 +104,7 @@ LinksStack.navigationOptions = {
 //
 
 const FormStack = createStackNavigator({
+  ExpenseForm: ExpenseFormScreen,
   Form: FormScreen,
 });
 

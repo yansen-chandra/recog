@@ -1,32 +1,40 @@
 import { StyleSheet } from 'react-native';
 import {Constants} from 'expo';
 
-export const FJApiDev = {
+//dev/sit environment
+//export const FJApi_Dev = {
+export const FJApi = {
     host: 'https://fj-demo-app.azurewebsites.net',
     apiUser:'fjdemoadmin',
     apiPassword:'Fuj1tsu123',
     getCompany: `https://fj-demo-app.azurewebsites.net/api/Claim/GetCompany`,
     getUser: `https://fj-demo-app.azurewebsites.net/api/Claim/GetUser`,
+    getLookup: `https://fj-demo-app.azurewebsites.net/api/Claim/GetLookup`,
     postClaim: `https://fj-demo-app.azurewebsites.net/api/Claim/PostClaim`,
 };
 
-export const FJApiVM = {
-    host: 'http://fapl-app.southeastasia.cloudapp.azure.com',
-    apiUser:'fjdemoadmin',
-    apiPassword:'Fuj1tsu123',
-    getCompany: `http://fapl-app.southeastasia.cloudapp.azure.com/api/Claim/GetCompany`,
-    getUser: `http://fapl-app.southeastasia.cloudapp.azure.com/api/Claim/GetUser`,
-    postClaim: `http://fapl-app.southeastasia.cloudapp.azure.com/api/Claim/PostClaim`,
-};
-
-export const FJApi = {
+//production environment
+//export const FJApi = {
+export const FJApi_Prod = {
     host: 'https://snap-send.azurewebsites.net',
     apiUser:'fjdemoadmin',
     apiPassword:'Fuj1tsu123',
     getCompany: `https://snap-send.azurewebsites.net/api/Claim/GetCompany`,
     getUser: `https://snap-send.azurewebsites.net/api/Claim/GetUser`,
+    getLookup: `https://snap-send.azurewebsites.net/api/Claim/GetLookup`,
     postClaim: `https://snap-send.azurewebsites.net/api/Claim/PostClaim`,
 };
+
+////production hosted at vm (obsolete and removed currently)
+//export const FJApiVM = {
+//    host: 'http://fapl-app.southeastasia.cloudapp.azure.com',
+//    apiUser:'fjdemoadmin',
+//    apiPassword:'Fuj1tsu123',
+//    getCompany: `http://fapl-app.southeastasia.cloudapp.azure.com/api/Claim/GetCompany`,
+//    getUser: `http://fapl-app.southeastasia.cloudapp.azure.com/api/Claim/GetUser`,
+//    getLookup: `http://fapl-app.southeastasia.cloudapp.azure.com/api/Claim/GetLookup`,
+//    postClaim: `http://fapl-app.southeastasia.cloudapp.azure.com/api/Claim/PostClaim`,
+//};
 
 
 
@@ -128,8 +136,8 @@ export const GlobalStyles = StyleSheet.create({
 });
 
 export const ClaimTypes = {
-    Entertainment: '05',
-    Expense: '03',
+    Entertainment: 5,
+    Expense: 3,
 }
 
 export default { FJApi, ABBYYApi, GlobalStyles };

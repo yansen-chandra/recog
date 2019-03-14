@@ -21,9 +21,9 @@ import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view
 import ClaimTypeSelect from "./ClaimTypeSelect";
 import { ClaimTypes } from '../app/constants';
 
-export default class FormScreen extends Component {
+export default class ExpenseFormScreen extends Component {
   static navigationOptions = {
-    title: 'Receipt Details',
+    title: 'Expense Receipt Details',
   };
   constructor(props) {
     super(props);
@@ -38,21 +38,15 @@ export default class FormScreen extends Component {
       wbsElement: '',
       wbsElementLabel: '',
       amount: "0",
-      amountPerHead: "0",
-      type: 'LUNCH',
-      typeLabel: 'LUNCH',
       reason: '',
       reasonLabel: '',
-      hostOfficerName: '',
-      delegatingOfficerName: '',
-      noOfGuest: "2",
-      guestNames: [],
-      noOfStaff: "0",
-      typePickerHide: true,
       reasonPickerHide: true,
+      currencyPickerHide: true,
       wbsPickerHide: true,
       receiptDateHide: true,
-
+      currency: 'SGD',
+      currencyLabel: 'Singapore Dollar (SGD)',
+      currencyRate: "1",
     };
   }
 
@@ -86,37 +80,9 @@ export default class FormScreen extends Component {
         receiptAmount: receipt.total,
         receiptDate: receipt.date ? receipt.date : new Date(),
         receiptUri: receipt.uri,
-        receiptBase64: receipt.base64,
-        type: this._getReceiptType(receipt)
+        receiptBase64: receipt.base64
       });
-      this._calcAmountPerHead({receiptAmount: receipt.total});
     }
-  }
-
-  _getReceiptType = (receipt) =>
-  {
-    var type = "LUNCH";
-    if(receipt.time)
-    {
-        var hour = parseInt(receipt.time.split(':')[0]);
-        if(hour < 12)
-        {
-          type = "BREAKFAST";
-        }
-        else if(hour < 15)
-        {
-          type = "LUNCH";
-        }
-        else if(hour < 17)
-        {
-          type = "TEA";
-        }
-        else {
-          type = "DINNER";
-        }
-
-    }
-    return type;
   }
 
   render() {
@@ -129,9 +95,9 @@ export default class FormScreen extends Component {
          <View style={styles.container}>
           <Card>
             <StatusBar barStyle="light-content" />
-            <ClaimTypeSelect selected={ClaimTypes.Entertainment}
-                receipt={this.state.receipt}
-                navigation={this.props.navigation}></ClaimTypeSelect>
+            <ClaimTypeSelect selected={ClaimTypes.Expense}
+              receipt={this.state.receipt}
+              navigation={this.props.navigation}></ClaimTypeSelect>
             {this._renderForm()}
             <Button
               buttonStyle={{ marginTop: 20 }}
@@ -150,33 +116,12 @@ export default class FormScreen extends Component {
     );
   }
 
-  setStateData(propname, value)
-  {
-    var data = {...this.state.data};
-    data[propname] = value;
-    this.setState({data});
-  }
-
-  _calcAmountPerHead = (rec) =>
-  {
-    rec = rec || {};
-    this.setState({amount: rec.receiptAmount || this.state.amount});
-    var result =
-      ( parseFloat(rec.receiptAmount || this.state.amount )
-        / ( parseFloat(rec.noOfGuest || this.state.noOfGuest ) + parseFloat( rec.noOfStaff || this.state.noOfStaff ))
-      ).toFixed(2)
-    ;
-    this.setState({amountPerHead: result});
-    return result.toString();
-  }
-
   _next = () => {
     //this._emailInput && this._emailInput.focus();
     Keyboard.dismiss();
   };
 
   _submit = async () => {
-    //let data = JSON.stringify(this.state, null, 4);
     if(!this._validate())
       return;
     Alert.alert(
@@ -190,10 +135,6 @@ export default class FormScreen extends Component {
     )
   };
 
-  _emailDialog = async (data) =>{
-    email(['yansen.chandra@sg.fujitsu.com'], null, null, 'Receipt Scan Result', data);
-  }
-
   _clearForm = () => {
     this.setState(
       {
@@ -202,20 +143,15 @@ export default class FormScreen extends Component {
         receiptNo: '',
         receiptDate: new Date(),
         receiptAmount: "0",
-        type: 'LUNCH',
         reason: '',
-        noOfGuest: "2",
-        guestNames: [],
-        noOfStaff: "0",
-        hostOfficerName: '',
-        delegatingOfficerName: '',
         amount: "0",
-        amountPerHead: "0",
         receiptUri: '',
         receiptBase64: null,
-        typePickerHide: true,
         reasonPickerHide: true,
+        currencyPickerHide: true,
         receiptDateHide: true,
+        currency: 'SGD',
+        currencyRate: "1",
       }
     );
   };
@@ -223,25 +159,12 @@ export default class FormScreen extends Component {
   _validate = () => {
     let {
       receiptAmount,
-      type,
       reason,
-      noOfGuest,
-      hostOfficerName,
-      guestNames,
+      currency,
     } = this.state;
     if(receiptAmount <= 0)
     {
       alert('Receipt Amount cannot be 0.');
-      return false;
-    }
-    if(noOfGuest <= 0)
-    {
-      alert('Number of Guest cannot be 0.');
-      return false;
-    }
-    if(!type)
-    {
-      alert('Claim Per Diem Type is required.');
       return false;
     }
     if(!reason)
@@ -249,9 +172,9 @@ export default class FormScreen extends Component {
       alert('Claim Reason is required.');
       return false;
     }
-    if(!hostOfficerName)
+    if(!currency)
     {
-      alert('Host officer name is required.');
+      alert('Currency is required.');
       return false;
     }
     return true;
@@ -265,30 +188,20 @@ export default class FormScreen extends Component {
       {
         const response = await fetch(this.state.receiptUri);
         let receiptImage = await response.blob();
-        // const reader = new FileReader();
-        // reader.readAsDataURL(receiptImage);
-        // reader.onloadend = () => {
-        //   let base64 = reader.result;
-        //   console.log(base64);
-        // };
       }
       const user = this.state.user;
       const data = {
         Claim: {
-          ClaimType: ClaimTypes.Entertainment,
+          ClaimType: ClaimTypes.Expense,
           RequestBy: user.id,
           RequestPhoneNo: user.mobile,
           ReceiptDate: this.state.receiptDate,
           ReceiptAmount: this.state.receiptAmount,
           ReceiptNo: this.state.receiptNo,
-          Type: this.state.type,
           Reason: this.state.reason,
-          NoOfGuest: this.state.noOfGuest,
-          GuestNames: this.state.guestNames.join(),
           ProjectNo: this.state.wbsElement,
-          HostOfficerName: this.state.hostOfficerName,
-          DelegatingOfficerName: this.state.delegatingOfficerName,
-          NoOfStaff: this.state.noOfStaff,
+          Currency: this.state.currency,
+          CurrencyRate: this.state.currencyRate,
         },
         ClaimImage: receiptImage,
         ClaimImageBase64: this.state.receiptBase64,
@@ -321,36 +234,6 @@ export default class FormScreen extends Component {
     }
   }
 
-  _renderGuestInputs = () => {
-    let inputs = [];
-    // if(this.state.noOfGuest && this.state.noOfGuest > 0) {
-    //   this.setState((state) => {guestNames: new Array(parseInt(state.noOfGuest))});
-    // }
-    for (let i = 0; i < this.state.noOfGuest; i++) {
-      var name = `_inputGuestName${i}`;
-      inputs.push(
-        <FormLabel key={`text${name}`}>
-          Guest #{(i+1).toString()}
-        </FormLabel>
-      );
-      inputs.push(
-        <FormInput
-          key={name}
-          style={styles.input}
-          value={this.state.guestNames[i]}
-          onChangeText={text => {
-            const items = this.state.guestNames;
-            items[i] = text;
-            this.forceUpdate();
-          }}
-          ref={ref => {this[name] = ref}}
-          placeholder={`Name/Designation/Company`}
-        />
-      );
-    }
-    return inputs;
-  }
-
   _closeButton = (onpress) => {
    return <Button
      buttonStyle={{ marginTop: 10, marginBottom: -10, alignSelf: 'flex-end', zIndex:9  }}
@@ -360,53 +243,57 @@ export default class FormScreen extends Component {
    ;
  }
 
-  _renderTypeInput = (isIos) => {
-    let luData = lutypes;
-      let typePicker =
-        <Picker style={{marginHorizontal:20}}
-          selectedValue={this.state.type}
-          mode="dialog"
-          onValueChange={(itemValue, itemIndex) => {this.setState({type: itemValue, typePickerHide: true}) } }>
-          {
-              luData.map((item) => {
-                  return (<Picker.Item  key={item.label} label={item.label} value={item.label} />);
-              })
-          }
-        </Picker>
-      ;
-      let typeModal =
-       this.state.typePickerHide ? <Text/> :
-       <ModalWrapper
-           containerStyle={{ flexDirection: 'row', alignItems: 'flex-end' }}
-           style={{ flex: 1 }}
-           visible={!this.state.typePickerHide}>
-           {this._closeButton(()=>{this.setState({typePickerHide:true})})}
-           {typePicker}
-       </ModalWrapper>
-      ;
+ _renderCurrencyInput = (isIos) => {
+   let luData = lucurrencies;
+   let reasonPicker =
+     <Picker style={{marginHorizontal:20, zIndex:8}}
+       selectedValue={this.state.currency}
+       mode="dialog"
+       onValueChange={(itemValue, itemIndex) => {
+         this.setState({
+           currency: itemValue, currencyLabel: luData[itemIndex].label , currencyPickerHide: true, currencyRate: luData[itemIndex].ExtraProperties[0].value
+         });
+        } }>
+       {
+           luData.map((item) => {
+               return (<Picker.Item  key={item.value} label={item.label} value={item.value} />);
+           })
+       }
+     </Picker>
+   ;
+   let reasonModal =
+     this.state.currencyPickerHide ? <Text/> :
+     <ModalWrapper
+         containerStyle={{ flexDirection: 'row', alignItems: 'flex-end' }}
+         style={{ flex: 1 }}
+         visible={!this.state.currencyPickerHide}>
+         {this._closeButton(()=>{this.setState({currencyPickerHide:true})})}
+         {reasonPicker}
+     </ModalWrapper>
+   ;
 
-      if(isIos)
-      {
-        return (
-          <View>
-            <FormLabel>Type *</FormLabel>
-            <TouchableOpacity style={styles.inputButton} onPress={() => { this.setState({typePickerHide: false});  }}>
-              <Text>{this.state.type ? this.state.type : "-- Choose Type --"}</Text>
-            </TouchableOpacity>
-            { typeModal }
-          </View>
-        );
-      }
-      else {
-        return (
-          <View>
-            <FormLabel>Type *</FormLabel>
-            { typePicker }
-          </View>
-        );
+     if(isIos)
+     {
+       return (
+         <View style={styles.section}>
+           <FormLabel>Reason *</FormLabel>
+           <TouchableOpacity style={styles.inputButton} onPress={() => { this.setState({currencyPickerHide: false});  }}>
+             <Text>{this.state.currency ? this.state.currencyLabel : "-- Choose Currency --"}</Text>
+           </TouchableOpacity>
+           { reasonModal }
+         </View>
+       );
+     }
+     else {
+       return (
+         <View>
+           <FormLabel>Currency *</FormLabel>
+           { reasonPicker }
+         </View>
+       );
 
-      }
-  }
+     }
+   }
 
   _renderReasonInput = (isIos) => {
     let luData = lureasons;
@@ -515,7 +402,6 @@ export default class FormScreen extends Component {
       }
   }
 
-
   _renderForm = () => {
     const isIos = Platform.OS === 'ios';
     const userContent = this.state.user ?
@@ -547,14 +433,13 @@ export default class FormScreen extends Component {
 
         <FormLabel>Receipt Amount (inclusive of GST) *</FormLabel>
         <FormInput
-          keyboardType="decimal-pad"
+          keyboardType="numeric"
           returnKeyType="done"
           onSubmitEditing={this._next}
           placeholder="Enter Receipt Amount ..."
           value={this.state.receiptAmount}
           onChangeText={text => {
             this.setState({ receiptAmount: text });
-            this._calcAmountPerHead({receiptAmount: text});
           }}
         />
 
@@ -565,87 +450,23 @@ export default class FormScreen extends Component {
           onChangeText={text => this.setState({ receiptNo: text})}
         />
 
-        {this._renderTypeInput(isIos)}
-        {this._renderReasonInput(isIos)}
         {this._renderWbsInput(isIos)}
+        {this._renderReasonInput(isIos)}
 
-        <FormLabel>Host Officer Name *</FormLabel>
+        {this._renderCurrencyInput(isIos)}
+        <FormLabel>Currency Rate</FormLabel>
         <FormInput
-          placeholder="Enter Host Officer Name ..."
-          value={this.state.hostOfficerName}
-          onChangeText={text => this.setState({ hostOfficerName: text})}
-        />
-
-        <FormLabel>Delegating Officer Name</FormLabel>
-        <FormInput
-          placeholder="Enter Delegation Officer Name ..."
-          value={this.state.delegatingOfficerName}
-          onChangeText={text => this.setState({ delegatingOfficerName: text})}
-        />
-
-        <FormLabel>No. of Guest</FormLabel>
-        <FormInput
-          style={styles.input}
-          value={this.state.noOfGuest}
-          onChangeText={text => {
-            if(text > 10)
-            {
-              alert('Max No. of Guest is 10.');
-              text = 10;
-            }
-            this.setState({ noOfGuest: text, guestNames: text ? new Array(parseInt(text)) : null});
-            this._calcAmountPerHead({noOfGuest: text});
-          }}
-          ref={ref => {this._inputWbsElement = ref}}
-          placeholder="Enter No of Guest"
-          autoCapitalize="none"
-          autoCorrect={false}
           keyboardType="numeric"
           returnKeyType="done"
           onSubmitEditing={this._next}
-          blurOnSubmit={false}
-        />
-
-        {this._renderGuestInputs()}
-
-        <FormLabel>No. of Staff (excluding hosting officer)</FormLabel>
-        <FormInput
-          style={styles.input}
-          value={this.state.noOfStaff}
+          placeholder="Enter Currency Rate ..."
+          value={this.state.currencyRate}
           onChangeText={text => {
-            this.setState({ noOfStaff: text });
-            this._calcAmountPerHead({noOfStaff: text});
+            this.setState({ currencyRate: text });
           }}
-          ref={ref => {this._inputNoOfStaff = ref}}
-          placeholder="Enter No of Staff"
-          autoCapitalize="none"
-          autoCorrect={false}
-          keyboardType="numeric"
-          returnKeyType="done"
-          onSubmitEditing={this._next}
-          blurOnSubmit={false}
         />
 
-  {/*      <Text style={styles.inputLabel}>
-          Amount
-        </Text>
-        <TextInput
-          editable={false}
-          style={styles.inputDisabled}
-          value={this.state.receiptAmount}
-          placeholder="Receipt Amount"
-        />
 
-        <Text style={styles.inputLabel}>
-          Amount Per Head
-        </Text>
-        <TextInput
-          editable={false}
-          style={styles.inputDisabled}
-          value={(parseFloat(this.state.amount) / (parseFloat(this.state.noOfGuest) + parseFloat(this.state.noOfStaff))).toString()}
-          placeholder="Amount Per Head"
-        />
-  */}
       </View>
 
     );
@@ -743,22 +564,13 @@ const styles = StyleSheet.create({
   },
 });
 
-const lutypes = [
+const lucurrencies = [
     {
-      label: 'BREAKFAST'
+      label: 'Singapore Dollar (SGD)', value: 'SGD', ExtraProperties: [{ key: 'Rate', value: "1" }]
     },
     {
-      label: 'LUNCH'
+      label: 'US Dollar (USD)', value: 'USD', ExtraProperties: [{ key: 'Rate', value: "1.4" }]
     },
-    {
-      label: 'DINNER'
-    },
-    {
-      label: 'REFRESHMENT'
-    },
-    {
-      label: 'TEA'
-    }
   ];
 
 const lureasons = [

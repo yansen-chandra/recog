@@ -52,6 +52,10 @@ export default {
     const url = `${Constants.FJApi.getUser}/${userid}`;
     return get(url);
   },
+  getExchangeRate: function(){
+    const url = `${Constants.FJApi.getLookup}?type=ExchangeRate`;
+    return get(url);
+  },
   postClaim: function(data){
     const url = Constants.FJApi.postClaim;
     return post(url, data);

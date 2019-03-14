@@ -10,8 +10,10 @@ import {
   TouchableOpacity,
   View,
   ScrollView,
+  Picker,
 } from 'react-native';
-import { Card, Button } from "react-native-elements";
+import ModalWrapper from 'react-native-modal-wrapper';
+import { Card, Button, FormLabel, FormInput, CheckBox  } from "react-native-elements";
 import { Constants, ImagePicker, Permissions, ImageManipulator } from 'expo';
 import uuid from 'uuid';
 import { isSignedIn } from "../app/auth";
@@ -33,6 +35,8 @@ export default class App extends React.Component {
     uploading: false,
     processMessage: '',
     user: null,
+    claimType: 5,
+    claimTypePickerHide: true,
   };
 
   async componentDidMount() {
@@ -59,6 +63,7 @@ export default class App extends React.Component {
 
   render() {
     let { image } = this.state;
+    const isIos = Platform.OS === 'ios';
 
     return (
       <ScrollView>
