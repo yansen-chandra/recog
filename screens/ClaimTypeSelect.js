@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import ModalWrapper from 'react-native-modal-wrapper';
 import { Card, FormLabel, FormInput, CheckBox  } from "react-native-elements";
+import FJServices from "../app/fjservices";
 
 export default class ClaimTypeSelect extends React.Component {
 
@@ -44,21 +45,23 @@ export default class ClaimTypeSelect extends React.Component {
           label: 'Expense Claim', value: 3
         },
       ];
-
        let typePicker =
          <Picker style={{marginHorizontal:20}}
            selectedValue={this.state.selected}
            mode="dialog"
            onValueChange={(itemValue, itemIndex) => {
-             this.setState({selected: itemValue, claimTypePickerHide: true});
+             this.setState({selected: itemValue, selectedLabel: luData[itemIndex].label, claimTypePickerHide: true});
              let formKey = "Form";
              switch(itemValue)
              {
                case 3:
                 formKey = "ExpenseForm";
+                this.props.navigation.navigate(formKey, {receipt: this.state.receipt});
+                break;
+              default:
+                this.props.navigation.navigate(formKey, {receipt: this.state.receipt});
                 break;
              }
-             this.props.navigation.navigate(formKey, {receipt: this.state.receipt});
            } }>
            {
                luData.map((item) => {
@@ -80,11 +83,16 @@ export default class ClaimTypeSelect extends React.Component {
 
        if(isIos)
        {
+         var selectedLabel;
+         luData.map((item) => {
+           if(item.value == this.state.selected)
+               selectedLabel = item.label;
+         });
          return (
            <View>
              <FormLabel>Type *</FormLabel>
              <TouchableOpacity style={styles.inputButton} onPress={() => { this.setState({claimTypePickerHide: false});  }}>
-               <Text>{this.state.selected ? this.state.selected : "-- Choose Type --"}</Text>
+               <Text>{this.state.selected ? selectedLabel : "-- Choose Type --"}</Text>
              </TouchableOpacity>
              { typeModal }
            </View>
@@ -102,8 +110,9 @@ export default class ClaimTypeSelect extends React.Component {
    }
 
   render() {
+    const isIos = Platform.OS === 'ios';
     return (
-        this._renderClaimTypeInput()
+        this._renderClaimTypeInput(isIos)
     );
   }
 }

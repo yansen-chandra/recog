@@ -57,12 +57,10 @@ export default class FormScreen extends Component {
   }
 
   componentDidMount(){
-   console.log('form did mount');
    this.props.navigation.addListener('willFocus', this._load);
   }
 
   _load = () => {
-    console.log('form load');
     isSignedIn()
     .then(user => {
       if(!user)

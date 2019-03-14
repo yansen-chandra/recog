@@ -104,8 +104,8 @@ LinksStack.navigationOptions = {
 //
 
 const FormStack = createStackNavigator({
-  ExpenseForm: ExpenseFormScreen,
   Form: FormScreen,
+  ExpenseForm: ExpenseFormScreen,
 });
 
 FormStack.navigationOptions = {

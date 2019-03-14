@@ -47,16 +47,28 @@ export default class ExpenseFormScreen extends Component {
       currency: 'SGD',
       currencyLabel: 'Singapore Dollar (SGD)',
       currencyRate: "1",
+      currencies: lucurrencies,
     };
   }
 
   componentDidMount(){
-   console.log('form did mount');
    this.props.navigation.addListener('willFocus', this._load);
+   this.setState({processing: true});
+   FJServices.getExchangeRate()
+   .then((result) => {
+     //console.log('get ExchangeRate', result);
+     this.setState({
+       currencies: result, processing: false
+     });
+   })
+   .catch((err) => {
+     console.log(err);
+     this.setState({processing: false});
+   });
+
   }
 
   _load = () => {
-    console.log('form load');
     isSignedIn()
     .then(user => {
       if(!user)
@@ -83,9 +95,22 @@ export default class ExpenseFormScreen extends Component {
         receiptBase64: receipt.base64
       });
     }
+
   }
 
   render() {
+    if (this.state.processing) {
+      return (
+        <View style={{flex: 1, paddingTop: 20}}>
+          <Spinner
+            visible={this.state.processing}
+            textContent={'Processing...'}
+            textStyle={{color: '#EEE'}}
+          />
+        </View>
+      );
+    }
+
     return (
       <KeyboardAwareScrollView
         extraScrollHeight={100}
@@ -98,7 +123,7 @@ export default class ExpenseFormScreen extends Component {
             <ClaimTypeSelect selected={ClaimTypes.Expense}
               receipt={this.state.receipt}
               navigation={this.props.navigation}></ClaimTypeSelect>
-            {this._renderForm()}
+            {this._renderForm(this.state.currencies)}
             <Button
               buttonStyle={{ marginTop: 20 }}
               backgroundColor="#03A9F4"
@@ -214,7 +239,7 @@ export default class ExpenseFormScreen extends Component {
         setTimeout(() => {
           console.log(result);
           Alert.alert('Submit Success', `Claim ${result.Message.substring(0,8)} submitted successfully. (Approval amount subjected to claim limit)`);
-        }, 100);
+        }, 500);
         this._clearForm();
       })
       .catch((err) => {
@@ -243,20 +268,22 @@ export default class ExpenseFormScreen extends Component {
    ;
  }
 
- _renderCurrencyInput = (isIos) => {
-   let luData = lucurrencies;
+ _renderCurrencyInput = (isIos, luData) => {
+   //let luData = lucurrencies;
+   //let luData = this.props.navigation.getParam("currencies", lucurrencies);
+   //let luData = this.state.currencies;
    let reasonPicker =
      <Picker style={{marginHorizontal:20, zIndex:8}}
        selectedValue={this.state.currency}
        mode="dialog"
        onValueChange={(itemValue, itemIndex) => {
          this.setState({
-           currency: itemValue, currencyLabel: luData[itemIndex].label , currencyPickerHide: true, currencyRate: luData[itemIndex].ExtraProperties[0].value
+           currency: itemValue, currencyLabel: luData[itemIndex].Text , currencyPickerHide: true, currencyRate: luData[itemIndex].ExtraProperties[0].Value
          });
         } }>
        {
            luData.map((item) => {
-               return (<Picker.Item  key={item.value} label={item.label} value={item.value} />);
+               return (<Picker.Item  key={item.Value} label={item.Text} value={item.Value} />);
            })
        }
      </Picker>
@@ -276,7 +303,7 @@ export default class ExpenseFormScreen extends Component {
      {
        return (
          <View style={styles.section}>
-           <FormLabel>Reason *</FormLabel>
+           <FormLabel>Currency *</FormLabel>
            <TouchableOpacity style={styles.inputButton} onPress={() => { this.setState({currencyPickerHide: false});  }}>
              <Text>{this.state.currency ? this.state.currencyLabel : "-- Choose Currency --"}</Text>
            </TouchableOpacity>
@@ -335,7 +362,7 @@ export default class ExpenseFormScreen extends Component {
       else {
         return (
           <View>
-            <FormLabel>Reason *</FormLabel>
+            <FormLabel>Description *</FormLabel>
             { reasonPicker }
           </View>
         );
@@ -402,12 +429,11 @@ export default class ExpenseFormScreen extends Component {
       }
   }
 
-  _renderForm = () => {
+  _renderForm = (currencies) => {
     const isIos = Platform.OS === 'ios';
     const userContent = this.state.user ?
     <Text>{this.state.user.Id}</Text>
     : <Text/>;
-
     return (
       <View>
         {userContent}
@@ -452,8 +478,7 @@ export default class ExpenseFormScreen extends Component {
 
         {this._renderWbsInput(isIos)}
         {this._renderReasonInput(isIos)}
-
-        {this._renderCurrencyInput(isIos)}
+        {this._renderCurrencyInput(isIos, currencies)}
         <FormLabel>Currency Rate</FormLabel>
         <FormInput
           keyboardType="numeric"
@@ -566,10 +591,7 @@ const styles = StyleSheet.create({
 
 const lucurrencies = [
     {
-      label: 'Singapore Dollar (SGD)', value: 'SGD', ExtraProperties: [{ key: 'Rate', value: "1" }]
-    },
-    {
-      label: 'US Dollar (USD)', value: 'USD', ExtraProperties: [{ key: 'Rate', value: "1.4" }]
+      Text: 'Singapore Dollar (SGD)', Value: 'SGD', ExtraProperties: [{ Key: 'Rate', Value: "1" }]
     },
   ];
 
@@ -578,12 +600,12 @@ const lureasons = [
       label: 'None', value: ''
     },
     {
-      label: 'Collaborators / Industry Partner', value: 'CI'
+      label: 'Description One', value: 'D1'
     },
     {
-      label: 'Conference Speaker', value: 'CS'
+      label: 'Description Two', value: 'D2'
     },
     {
-      label: 'Meeting / Discussion', value: 'MD'
+      label: 'Description Three', value: 'D3'
     },
   ];
