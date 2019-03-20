@@ -9,7 +9,7 @@
       "ios",
       "android"
     ],
-    "version": "1.2.0",
+    "version": "1.2.2",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "splash": {
@@ -33,7 +33,13 @@
       },
     },
     "android": {
-      "package": "com.fapl.snapadsend"
+      "package": "com.fapl.snapadsend",
+      "versionCode": 4,
+      "permissions": [
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE"
+      ]
     }
   }
 }

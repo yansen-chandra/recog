@@ -110,6 +110,7 @@ export default class ClaimTypeSelect extends React.Component {
    }
 
   render() {
+    return null;
     const isIos = Platform.OS === 'ios';
     return (
         this._renderClaimTypeInput(isIos)

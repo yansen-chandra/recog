@@ -3,7 +3,7 @@ import {Constants} from 'expo';
 
 //dev/sit environment
 //export const FJApi_Dev = {
-export const FJApi = {
+export const FJApi_Dev = {
     host: 'https://fj-demo-app.azurewebsites.net',
     apiUser:'fjdemoadmin',
     apiPassword:'Fuj1tsu123',
@@ -15,7 +15,7 @@ export const FJApi = {
 
 //production environment
 //export const FJApi = {
-export const FJApi_Prod = {
+export const FJApi = {
     host: 'https://snap-send.azurewebsites.net',
     apiUser:'fjdemoadmin',
     apiPassword:'Fuj1tsu123',
